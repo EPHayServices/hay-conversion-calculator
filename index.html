@@ -78,6 +78,10 @@
             margin-top: 30px;
             text-align: justify;
         }
+        .small-italic {
+            font-size: 10px;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -88,15 +92,24 @@
 
     <h1>Hay Potential Calculator</h1>
     
-    <div id="pricing-info"></div>
+    <div id="pricing-info">
+      <h2>Our Services</h2>
+      <ul>
+        <li><strong>Baling:</strong> $26 per bale <span class="small-italic">plus gst</span></li>
+        <li><strong>Mowing:</strong> $55 per hectare <span class="small-italic">plus gst</span></li>
+        <li><strong>Rake Dry Hire:</strong> $5 per hectare <span class="small-italic">plus gst</span></li>
+      </ul>
+      <p class="disclaimer">*Client to provide diesel, cost factor has been included into the costs per bale</p>
+    </div>
 
     <form id="hayCalculator">
         <h2>Enter Paddock Details</h2>
         
-        <label for="paddockSize">Paddock Size (Hectares):</label>
-        <input type="number" id="paddockSize"><br><br>
+        <label for="paddockSize">Hectares:</label>
+        <input type="number" id="paddockSize"><br>
+        <p class="small-italic">to find out costs per 1 bale leave this section blank</p><br>
 
-        <label for="hayType">Hay Type:</label>
+        <label for="hayType">Crop Type:</label>
         <select id="hayType" required>
             <option value="wheat">Wheat</option>
             <option value="barley">Barley</option>
@@ -167,11 +180,13 @@
                 const totalContractingCost = totalMowingCost + totalRakingCost + totalBalingCost;
                 
                 const costPerBale = totalContractingCost / totalBales;
+                const totalCostPerHectare = totalContractingCost / paddockSize;
                 
                 let htmlOutput = `
                     <h2>Results</h2>
                     <p><strong>Total Paddock Yield:</strong> ${totalHayTonnage.toFixed(2)} tonnes</p>
                     <p><strong>Total Bales:</strong> ${Math.round(totalBales)} bales</p>
+                    <h3>Total Cost per Hectare: $${totalCostPerHectare.toFixed(2)}</h3>
                     <h3>Estimated Cost per Bale: $${costPerBale.toFixed(2)}</h3>
                 `;
                 
