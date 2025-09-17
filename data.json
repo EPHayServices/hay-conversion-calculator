@@ -1,8 +1,8 @@
 {
   "contracting_rates": {
-    "cutting": 60,
+    "cutting": 55,
     "raking": 5,
-    "baling_per_bale": 28,
+    "baling_per_bale": 26,
     "freight_cost_per_km": 0.15
   },
   "yield_conversions": {
