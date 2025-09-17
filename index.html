@@ -87,6 +87,8 @@
     </div>
 
     <h1>Hay Potential Calculator</h1>
+    
+    <div id="pricing-info"></div>
 
     <form id="hayCalculator">
         <h2>Enter Paddock Details</h2>
@@ -117,6 +119,7 @@
     <script>
         const hayCalculatorForm = document.getElementById('hayCalculator');
         const resultsDiv = document.getElementById('results');
+        const pricingInfoDiv = document.getElementById('pricing-info');
 
         let data;
 
@@ -124,71 +127,91 @@
             try {
                 const response = await fetch('data.json');
                 data = await response.json();
+                
+                if (!data || Object.keys(data).length === 0) {
+                    throw new Error("Received empty or invalid data from the JSON file.");
+                }
+
+                displayPrices();
+                
+                hayCalculatorForm.querySelector('button').disabled = false;
+                
             } catch (error) {
                 console.error("Error loading data:", error);
-                resultsDiv.innerHTML = "<p style='color:red;'>Error: Could not load pricing data. Please ensure the data.json file is in the same folder.</p>";
+                const errorMessage = "Error: Could not load pricing data. Please ensure the data.json file is in the same folder.";
+                
+                resultsDiv.innerHTML = `<p style='color:red;'>${errorMessage}</p>`;
+                
+                hayCalculatorForm.querySelector('button').disabled = true;
+                
                 return;
+            }
+
+            function formatCurrency(number) {
+                return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(number).replace('$', '');
+            }
+
+            function displayPrices() {
+                let html = '<h2>Current Hay Prices (per tonne)</h2><ul>';
+                for (const hayType in data.commodity_prices) {
+                    const price = data.commodity_prices[hayType];
+                    html += `<li><strong>${hayType.charAt(0).toUpperCase() + hayType.slice(1)}:</strong> $${formatCurrency(price)}</li>`;
+                }
+                html += '</ul>';
+                pricingInfoDiv.innerHTML = html;
             }
 
             hayCalculatorForm.addEventListener('submit', function(event) {
                 event.preventDefault();
 
-                // If paddock size is blank, default to 1
                 const paddockSize = parseFloat(document.getElementById('paddockSize').value) || 1;
                 const hayType = document.getElementById('hayType').value;
                 const expectedGrainYield = parseFloat(document.getElementById('expectedGrainYield').value);
-                
-                // Get conversion factors for interpolation
-                const conversions = data.yield_conversions[hayType].grain_to_hay;
-                const keys = Object.keys(conversions).map(Number).sort((a, b) => a - b);
-                
-                let yieldConversionFactor;
 
-                // Handle exact matches or values outside the table
-                if (conversions[expectedGrainYield]) {
-                    yieldConversionFactor = conversions[expectedGrainYield];
-                } else if (expectedGrainYield < keys[0]) {
-                    yieldConversionFactor = conversions[keys[0]];
-                } else if (expectedGrainYield > keys[keys.length - 1]) {
-                    yieldConversionFactor = conversions[keys[keys.length - 1]];
-                } else {
-                    // Perform linear interpolation
-                    const lowerIndex = keys.findIndex(key => key > expectedGrainYield) -1;
-                    const upperIndex = keys.findIndex(key => key >= expectedGrainYield);
-                    
-                    const x1 = keys[lowerIndex];
-                    const y1 = conversions[x1];
-                    const x2 = keys[upperIndex];
-                    const y2 = conversions[x2];
-                    
-                    yieldConversionFactor = y1 + ((expectedGrainYield - x1) * (y2 - y1) / (x2 - x1));
-                }
+                // Get the conversion factor directly, no need for interpolation
+                const yieldConversionFactor = data.yield_conversions[hayType].grain_to_hay;
                 
                 const hayYieldPerHectare = expectedGrainYield * yieldConversionFactor;
                 const totalHayTonnage = paddockSize * hayYieldPerHectare;
-                
-                // Calculate total bales based on bale weight
                 const totalBales = totalHayTonnage / (data.bale_size_kg / data.kg_per_tonne);
 
-                // Calculate total costs
                 const totalMowingCost = paddockSize * data.contracting_rates.cutting;
                 const totalRakingCost = paddockSize * data.contracting_rates.raking;
                 const totalBalingCost = totalBales * data.contracting_rates.baling_per_bale;
-
                 const totalContractingCost = totalMowingCost + totalRakingCost + totalBalingCost;
                 
                 const costPerBale = totalContractingCost / totalBales;
                 const totalCostPerHectare = totalContractingCost / paddockSize;
                 
-                resultsDiv.innerHTML = `
+                const commodityPrice = data.commodity_prices[hayType];
+                const totalHayValue = totalHayTonnage * commodityPrice;
+                const totalProfit = totalHayValue - totalContractingCost;
+                const profitPerBale = totalProfit / totalBales;
+
+                let htmlOutput = `
                     <h2>Results</h2>
                     <p><strong>Total Paddock Yield:</strong> ${totalHayTonnage.toFixed(2)} tonnes</p>
                     <p><strong>Total Bales:</strong> ${Math.round(totalBales)} bales</p>
-                    <h3>Total Cost per Hectare: $${totalCostPerHectare.toFixed(2)}</h3>
                     <h3>Estimated Cost per Bale: $${costPerBale.toFixed(2)}</h3>
+                    <h3>Estimated Profit per Bale: $${profitPerBale.toFixed(2)}</h3>
                 `;
+                
+                if (document.getElementById('paddockSize').value !== '') {
+                    htmlOutput += `
+                        <hr>
+                        <h3>Working Out:</h3>
+                        <p><strong>Paddock Size:</strong> ${paddockSize} hectares</p>
+                        <p><strong>Total Contracting Cost:</strong> $${formatCurrency(totalContractingCost.toFixed(2))}</p>
+                        <p><strong>Total Paddock Value:</strong> ${totalHayTonnage.toFixed(2)} tonnes x $${formatCurrency(commodityPrice)} = $${formatCurrency(totalHayValue.toFixed(2))}</p>
+                        <h3>Paddock Profit: $${formatCurrency(totalProfit.toFixed(2))}</h3>
+                    `;
+                }
+                
+                resultsDiv.innerHTML = htmlOutput;
             });
         }
+
+        hayCalculatorForm.querySelector('button').disabled = true;
 
         loadDataAndSetup();
     </script>
