@@ -19,12 +19,6 @@
       "grain_to_hay": 2.6
     }
   },
-  "commodity_prices": {
-    "wheat": 265,
-    "barley": 265,
-    "oats": 265,
-    "vetch": 265
-  },
   "bale_size_kg": 750,
   "kg_per_tonne": 1000
 }
