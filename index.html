@@ -19,9 +19,12 @@
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
         }
         label {
             font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
         }
         input, select, button {
             width: 100%;
@@ -30,14 +33,16 @@
             margin-bottom: 10px;
             border-radius: 5px;
             border: 1px solid #ddd;
+            box-sizing: border-box;
         }
         button {
             background-color: #006400;
             color: white;
             border: none;
             cursor: pointer;
+            padding: 15px;
         }
-        #results {
+        #results, #profit-section {
             margin-top: 20px;
             padding: 20px;
             background-color: #e9e9e9;
@@ -67,6 +72,12 @@
             color: #666;
             margin-top: 5px;
         }
+        .service-option {
+            margin-bottom: 10px;
+        }
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -77,21 +88,11 @@
 
     <h1>Hay Potential Calculator</h1>
     
-    <div id="pricing-info">
-      <h2>Our Services</h2>
-      <ul>
-        <li><strong>Baling:</strong> $26 per bale <span class="small-italic">plus gst</span></li>
-        <li><strong>Mowing:</strong> $55 per hectare <span class="small-italic">plus gst</span></li>
-        <li><strong>Rake Dry Hire:</strong> $5 per hectare <span class="small-italic">plus gst</span></li>
-      </ul>
-      <p class="disclaimer">*Client to provide diesel, cost factor has been included into the costs per bale</p>
-    </div>
-
     <form id="hayCalculator">
         <h2>Enter Paddock Details</h2>
         
         <label for="paddockSize">Hectares:</label>
-        <input type="number" id="paddockSize"><br>
+        <input type="number" id="paddockSize" placeholder="100"><br>
         <p class="small-italic">to find out costs per 1 bale leave this section blank</p><br>
 
         <label for="hayType">Crop Type:</label>
@@ -103,98 +104,190 @@
         </select><br><br>
 
         <label for="expectedGrainYield">Expected Grain Yield (Tonnes per Hectare):</label>
-        <input type="number" id="expectedGrainYield" step="any" required><br><br>
-        
+        <input type="number" id="expectedGrainYield" step="any" required placeholder="3.5"><br><br>
+
+        <h2>Select Services Required</h2>
+        <div id="service-options">
+            <div class="service-option">
+                <input type="checkbox" id="service-mowing" value="mowing" checked>
+                <label for="service-mowing" style="display:inline;">Mowing - DC163 Case IH Mower Conditioner or SP Mower</label>
+            </div>
+            <div class="service-option">
+                <input type="checkbox" id="service-raking" value="raking" checked>
+                <label for="service-raking" style="display:inline;">Raking - [Placeholder for your new rake]</label>
+            </div>
+            <div class="service-option">
+                <input type="checkbox" id="service-baling" value="baling" checked>
+                <label for="service-baling" style="display:inline;">Baling - Krone HD Baler (750kg per bale)</label>
+            </div>
+        </div>
+        <p class="small-italic">*Client to provide diesel, cost factor has been included into the costs per bale</p><br>
+
         <button type="submit">Calculate</button>
     </form>
 
     <div id="results"></div>
+
+    <div id="profit-section" class="hidden">
+        <hr>
+        <h2>Hay Market Returns</h2>
+        <p>Calculate your potential profit.</p>
+        <label for="hay-price">Current Hay Price ($ per tonne):</label>
+        <input type="number" id="hay-price" step="any" placeholder="e.g., 200"><br>
+        <label for="grain-price">Current Grain Price ($ per tonne):</label>
+        <input type="number" id="grain-price" step="any" placeholder="e.g., 300"><br>
+        <button id="calculate-profit-btn" type="button">Calculate Profit</button>
+        <div id="profit-results"></div>
+    </div>
 
     <p class="disclaimer">
         *This Hay Potential Calculator is for estimation purposes only. The results are based on our contracting costs and a yield conversion model. Actual paddock yield and financial returns can vary significantly due to local conditions, soil types, farming practices, and market fluctuations. These figures should be used as a guide and not a guarantee. We recommend seeking professional advice before making financial decisions.*
     </p>
 
     <script>
+        // The data for the calculator is now embedded directly in the script.
+        const data = {
+            "contracting_rates": {
+                "cutting": 60,
+                "raking": 5,
+                "baling_per_bale": 28,
+                "freight_cost_per_km": 0.15
+            },
+            "yield_conversions": {
+                "wheat": { "grain_to_hay": 1.9 },
+                "barley": { "grain_to_hay": 1.7 },
+                "oats": { "grain_to_hay": 2.3 },
+                "vetch": { "grain_to_hay": 2.6 }
+            },
+            "bale_size_kg": 750,
+            "kg_per_tonne": 1000
+        };
+
         const hayCalculatorForm = document.getElementById('hayCalculator');
         const resultsDiv = document.getElementById('results');
+        const profitSection = document.getElementById('profit-section');
+        const calculateProfitBtn = document.getElementById('calculate-profit-btn');
+        const profitResultsDiv = document.getElementById('profit-results');
 
-        let data;
+        let lastCalculation = {};
 
-        async function loadDataAndSetup() {
-            try {
-                const response = await fetch('data.json');
-                data = await response.json();
-                
-                if (!data || Object.keys(data).length === 0) {
-                    throw new Error("Received empty or invalid data from the JSON file.");
-                }
-                
-                hayCalculatorForm.querySelector('button').disabled = false;
-                
-            } catch (error) {
-                console.error("Error loading data:", error);
-                const errorMessage = "Error: Could not load pricing data. Please ensure the data.json file is in the same folder.";
-                
-                resultsDiv.innerHTML = `<p style='color:red;'>${errorMessage}</p>`;
-                
-                hayCalculatorForm.querySelector('button').disabled = true;
-                
+        function formatCurrency(number) {
+            // Check if the number is valid and return 0.00 if not
+            if (isNaN(number) || !isFinite(number)) {
+                return '0.00';
+            }
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(number).replace('$', '');
+        }
+
+        hayCalculatorForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const paddockSize = parseFloat(document.getElementById('paddockSize').value) || 1;
+            const hayType = document.getElementById('hayType').value;
+            const expectedGrainYield = parseFloat(document.getElementById('expectedGrainYield').value);
+
+            if (isNaN(expectedGrainYield)) {
+                resultsDiv.innerHTML = `<p style='color:red;'>Please enter a valid number for Expected Grain Yield.</p>`;
+                profitSection.classList.add('hidden');
                 return;
             }
 
-            function formatCurrency(number) {
-                return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(number).replace('$', '');
+            const yieldConversionFactor = data.yield_conversions[hayType].grain_to_hay;
+            const hayYieldPerHectare = expectedGrainYield * yieldConversionFactor;
+            const totalHayTonnage = paddockSize * hayYieldPerHectare;
+            const totalBales = totalHayTonnage / (data.bale_size_kg / data.kg_per_tonne);
+
+            let totalContractingCost = 0;
+            const mowingCheckbox = document.getElementById('service-mowing');
+            const rakingCheckbox = document.getElementById('service-raking');
+            const balingCheckbox = document.getElementById('service-baling');
+
+            if (mowingCheckbox.checked) {
+                totalContractingCost += paddockSize * data.contracting_rates.cutting;
+            }
+            if (rakingCheckbox.checked) {
+                totalContractingCost += paddockSize * data.contracting_rates.raking;
+            }
+            if (balingCheckbox.checked) {
+                totalContractingCost += totalBales * data.contracting_rates.baling_per_bale;
             }
 
-            hayCalculatorForm.addEventListener('submit', function(event) {
-                event.preventDefault();
+            let costPerBale = 0;
+            let totalCostPerHectare = 0;
 
-                const paddockSize = parseFloat(document.getElementById('paddockSize').value) || 1;
-                const hayType = document.getElementById('hayType').value;
-                const expectedGrainYield = parseFloat(document.getElementById('expectedGrainYield').value);
+            if (totalBales > 0) {
+                costPerBale = totalContractingCost / totalBales;
+            }
+            if (paddockSize > 0) {
+                totalCostPerHectare = totalContractingCost / paddockSize;
+            }
 
-                const yieldConversionFactor = data.yield_conversions[hayType].grain_to_hay;
-                
-                const hayYieldPerHectare = expectedGrainYield * yieldConversionFactor;
-                const totalHayTonnage = paddockSize * hayYieldPerHectare;
-                const totalBales = totalHayTonnage / (data.bale_size_kg / data.kg_per_tonne);
+            lastCalculation = {
+                paddockSize,
+                totalHayTonnage,
+                totalBales,
+                totalContractingCost,
+                expectedGrainYield
+            };
 
-                const totalMowingCost = paddockSize * data.contracting_rates.cutting;
-                const totalRakingCost = paddockSize * data.contracting_rates.raking;
-                const totalBalingCost = totalBales * data.contracting_rates.baling_per_bale;
-                const totalContractingCost = totalMowingCost + totalRakingCost + totalBalingCost;
-                
-                const costPerBale = totalContractingCost / totalBales;
-                const totalCostPerHectare = totalContractingCost / paddockSize;
-                
-                let htmlOutput = `
-                    <h2>Results</h2>
-                    <p><strong>Total Paddock Yield:</strong> ${totalHayTonnage.toFixed(2)} tonnes</p>
-                    <p><strong>Total Bales:</strong> ${Math.round(totalBales)} bales</p>
-                    <h3>Total Cost per Hectare: $${totalCostPerHectare.toFixed(2)}</h3>
-                    <h3>Estimated Cost per Bale: $${costPerBale.toFixed(2)}</h3>
+            let htmlOutput = `
+                <h2>Results</h2>
+                <p><strong>Total Paddock Yield:</strong> ${totalHayTonnage.toFixed(2)} tonnes</p>
+                <p><strong>Total Bales:</strong> ${Math.round(totalBales)} bales</p>
+                <h3>Total Cost per Hectare: $${formatCurrency(totalCostPerHectare)}</h3>
+                <h3>Estimated Cost per Bale: $${formatCurrency(costPerBale)}</h3>
+            `;
+            
+            if (document.getElementById('paddockSize').value !== '') {
+                htmlOutput += `
+                    <hr>
+                    <h3>Working Out:</h3>
+                    <p><strong>Paddock Size:</strong> ${paddockSize} hectares</p>
+                    <p><strong>Estimated Contracting Cost:</strong> $${formatCurrency(totalContractingCost)}</p>
+                    <p class="results-disclaimer">
+                        This figure is an estimate and not a final invoice amount. The final cost may vary due to on-site conditions, variations in service, and other factors.
+                    </p>
                 `;
-                
-                if (document.getElementById('paddockSize').value !== '') {
-                    htmlOutput += `
-                        <hr>
-                        <h3>Working Out:</h3>
-                        <p><strong>Paddock Size:</strong> ${paddockSize} hectares</p>
-                        <p><strong>Estimated Contracting Cost:</strong> $${formatCurrency(totalContractingCost.toFixed(2))}</p>
-                        <p class="results-disclaimer">
-                            This figure is an estimate and not a final invoice amount. The final cost may vary due to on-site conditions, variations in service, and other factors.
-                        </p>
-                    `;
-                }
-                
-                resultsDiv.innerHTML = htmlOutput;
-            });
-        }
+            }
+            
+            resultsDiv.innerHTML = htmlOutput;
+            profitSection.classList.remove('hidden');
+        });
 
-        hayCalculatorForm.querySelector('button').disabled = true;
+        calculateProfitBtn.addEventListener('click', function() {
+            const hayPricePerTonne = parseFloat(document.getElementById('hay-price').value);
+            const grainPricePerTonne = parseFloat(document.getElementById('grain-price').value);
 
-        loadDataAndSetup();
+            if (Object.keys(lastCalculation).length === 0 || isNaN(hayPricePerTonne) || isNaN(grainPricePerTonne)) {
+                profitResultsDiv.innerHTML = `<p style='color:red;'>Please run the main calculation and enter valid prices for both hay and grain.</p>`;
+                return;
+            }
+
+            const totalHayRevenue = lastCalculation.totalHayTonnage * hayPricePerTonne;
+            const totalHayProfit = totalHayRevenue - lastCalculation.totalContractingCost;
+
+            let hayRevenuePerBale = 0;
+            let hayProfitPerBale = 0;
+            if (lastCalculation.totalBales > 0) {
+                 hayRevenuePerBale = totalHayRevenue / lastCalculation.totalBales;
+                 hayProfitPerBale = totalHayProfit / lastCalculation.totalBales;
+            }
+           
+            const totalGrainRevenue = lastCalculation.paddockSize * lastCalculation.expectedGrainYield * grainPricePerTonne;
+
+            profitResultsDiv.innerHTML = `
+                <h3>Hay Financial Returns</h3>
+                <p><strong>Revenue per Bale:</strong> $${formatCurrency(hayRevenuePerBale)}</p>
+                <p><strong>Total Revenue:</strong> $${formatCurrency(totalHayRevenue)}</p>
+                <p><strong>Profit per Bale:</strong> $${formatCurrency(hayProfitPerBale)}</p>
+                <p><strong>Total Profit:</strong> $${formatCurrency(totalHayProfit)}</p>
+                <hr>
+                <h3>Comparison: Hay vs. Grain</h3>
+                <p><strong>Estimated Grain Price:</strong> $${formatCurrency(grainPricePerTonne)} per tonne</p>
+                <p><strong>Estimated Grain Revenue:</strong> $${formatCurrency(totalGrainRevenue)}</p>
+                <p><strong>Estimated Hay Revenue:</strong> $${formatCurrency(totalHayRevenue)}</p>
+            `;
+        });
     </script>
 </body>
 </html>
-
