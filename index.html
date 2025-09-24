@@ -267,6 +267,8 @@
 
             const totalHayRevenue = lastCalculation.totalHayTonnage * hayPricePerTonne;
             const totalHayProfit = totalHayRevenue - lastCalculation.totalContractingCost;
+            const profitPerHectare = totalHayProfit / lastCalculation.paddockSize;
+
 
             let hayRevenuePerBale = 0;
             let hayProfitPerBale = 0;
@@ -282,6 +284,7 @@
                 <p><strong>Revenue per Bale:</strong> $${formatCurrency(hayRevenuePerBale)}</p>
                 <p><strong>Total Revenue:</strong> $${formatCurrency(totalHayRevenue)}</p>
                 <p><strong>Profit per Bale:</strong> $${formatCurrency(hayProfitPerBale)}</p>
+                <p><strong>Profit per Hectare:</strong> $${formatCurrency(profitPerHectare)}</p>
                 <p><strong>Total Profit:</strong> $${formatCurrency(totalHayProfit)}</p>
                 <hr>
                 <h3>Comparison: Hay vs. Grain</h3>
