@@ -121,7 +121,7 @@
     <!-- Include KaTeX for rendering mathematical formulas -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" xintegrity="sha384-GvrF9wQ4sS1n+kFqgI+0m7J3z3n6lJvEwLg3n0m5T5X0v1Y8M3M3V3Q1I0P0M0M0M0M" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" xintegrity="sha384-hJ+1+k1xS/h3V/J9V3j2wT9k2j0t/l9w/7l7V9q4zQ1I0P0M0M0M0M0M" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" xintegrity="sha384-r+lW3x2jWp2Y0j7R9oQ1B/3nJ9qP9j8n4wP5p7R3w4L3n3J9V3j2wT9k2j0t/l9w/7l7V9q4zQ1I0P0M0M0M0M0M" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" xintegrity="sha384-r+lW3x2jWp2Y0j7R9oQ1B/3nJ9qP9j8n4wP5p7R3w4L3n3J9qP9j8n4wP5p7R3w4L3n3J9V3j2wT9k2j0t/l9w/7l7V9q4zQ1I0P0M0M0M0M0M" crossorigin="anonymous"></script>
 
 </head>
 <body>
@@ -187,7 +187,9 @@
     <div id="profit-section" class="hidden">
         <hr>
         <h2>Hay Market Returns</h2>
-        <p>Calculate your potential profit.</p>
+        <!-- UPDATED SENTENCE HERE -->
+        <p>Calculate your potential profit. **Please input farm gate prices (prices after considering freight to market).**</p>
+        
         <label for="hay-price">Current Hay Price ($ per tonne):</label>
         <input type="number" id="hay-price" step="any" placeholder="e.g., 200"><br>
         
@@ -280,7 +282,8 @@
             if (isNaN(number) || !isFinite(number)) {
                 return '0.00';
             }
-            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(number).replace('$', '');
+            // Use currency formatting without the currency symbol ($)
+            return new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(number);
         }
 
         hayCalculatorForm.addEventListener('submit', function(event) {
@@ -469,14 +472,13 @@
             
             // If NOT medic, we must ensure grain price is valid for comparison
             if (!isMedic && (isNaN(grainPricePerTonne) || grainPricePerTonne <= 0)) {
-                profitResultsDiv.innerHTML = `<p style='color:red;'>Please enter a valid price greater than 0 for **Grain** to complete the comparison.</p>`;
+                profitResultsDiv.innerHTML = `<p style='color:red;'>Please run the main calculation and enter a valid price greater than 0 for **Grain** to complete the comparison.</p>`;
                 return;
             }
 
             const totalHayRevenue = lastCalculation.totalHayTonnage * hayPricePerTonne;
             const totalHayProfit = totalHayRevenue - lastCalculation.totalContractingCost;
             const profitPerHectare = totalHayProfit / lastCalculation.paddockSize;
-
 
             let hayRevenuePerBale = 0;
             let hayProfitPerBale = 0;
@@ -485,12 +487,15 @@
                  hayProfitPerBale = totalHayProfit / lastCalculation.totalBales;
             }
            
-            // This calculation always uses the 'expectedGrainYield' input for the comparison
             const totalGrainRevenue = lastCalculation.paddockSize * lastCalculation.expectedGrainYield * grainPricePerTonne;
             
-            // Only show Grain Comparison if expectedGrainYield was a factor (>0)
             let grainComparisonHTML = '';
+            let differenceHtml = '';
+
+            // Only perform and display comparison if Grain Yield was an input (>0)
             if (lastCalculation.expectedGrainYield > 0) {
+                 
+                 // 1. Comparison Details
                  grainComparisonHTML = `
                     <hr>
                     <h3>Comparison: Hay vs. Grain</h3>
@@ -498,8 +503,26 @@
                     <p><strong>Estimated Grain Revenue:</strong> $${formatCurrency(totalGrainRevenue)}</p>
                     <p><strong>Estimated Hay Revenue:</strong> $${formatCurrency(totalHayRevenue)}</p>
                  `;
-            }
 
+                 // 2. Profit Difference Calculation and Display
+                 const difference = totalHayProfit - totalGrainRevenue; // Hay Profit minus Grain Revenue
+                 const winner = difference >= 0 ? 'Hay' : 'Grain';
+                 const differenceAbs = Math.abs(difference);
+                 const color = difference >= 0 ? '#006400' : '#8B0000'; // Green for Hay winner, Red for Grain winner
+                 
+                 let phrase = difference >= 0 ? "Hay is more profitable by" : "Grain is more profitable by";
+
+                 differenceHtml = `
+                     <hr>
+                     <p style="font-size: 1.2em; font-weight: bold; color: ${color}; margin-top: 15px; text-align: center;">
+                         <!-- Removed the bracketed (${winner}) part -->
+                         ${phrase}: $${formatCurrency(differenceAbs)}
+                     </p>
+                     <p class="results-disclaimer" style="font-size: 10px; margin-top: 5px; text-align: center;">
+                         *This comparison is between Hay **Profit** (Revenue minus our contracting costs) and theoretical Grain **Revenue** (Revenue only).
+                     </p>
+                 `;
+            }
 
             profitResultsDiv.innerHTML = `
                 <h3>Hay Financial Returns</h3>
@@ -509,6 +532,7 @@
                 <p><strong>Profit per Hectare:</strong> $${formatCurrency(profitPerHectare)}</p>
                 <p><strong>Total Profit:</strong> $${formatCurrency(totalHayProfit)}</p>
                 ${grainComparisonHTML}
+                ${differenceHtml}
             `;
         });
     </script>
