@@ -78,11 +78,34 @@
         .hidden {
             display: none;
         }
+        /* Style for the new Booking CTA section */
+        .booking-cta {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #008000; /* Darker green */
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+        .booking-cta a {
+            color: white;
+            font-size: 1.2em;
+            font-weight: bold;
+            text-decoration: none;
+            display: block; 
+            padding: 5px;
+            transition: background-color 0.2s;
+        }
+        .booking-cta a:hover {
+            text-decoration: underline;
+            background-color: #006400; /* Slightly darker on hover */
+        }
     </style>
 </head>
 <body>
 
     <div class="logo-container">
+      <!-- UPDATED: Using relative path 'logo.png' for GitHub hosting -->
       <img src="logo.png" alt="Your Company Logo" class="logo">
     </div>
 
@@ -106,6 +129,13 @@
 
         <label for="expectedGrainYield">Expected Grain Yield (Tonnes per Hectare):</label>
         <input type="number" id="expectedGrainYield" step="any" required placeholder="3.5"><br><br>
+        
+        <!-- UPDATED INPUT FIELD LABEL -->
+        <label for="estimatedHayYieldPerHa">Estimated Hay Yield (Tonnes per Hectare):</label>
+        <input type="number" id="estimatedHayYieldPerHa" step="any" placeholder="Leave blank to use conversion defaults">
+        <p class="small-italic">Enter your estimated hay yield per hectare. If left blank, the calculator will use the default Hay/Grain conversion ratio based on your selected crop type.</p><br>
+        <!-- END UPDATED INPUT FIELD -->
+
 
         <h2>Select Services Required</h2>
         <div id="service-options">
@@ -145,6 +175,13 @@
         *This Hay Potential Calculator is for estimation purposes only. The results are based on our contracting costs and a yield conversion model. Actual paddock yield and financial returns can vary significantly due to local conditions, soil types, farming practices, and market fluctuations. These figures should be used as a guide and not a guarantee. We recommend seeking professional advice before making financial decisions.*
     </p>
 
+    <!-- New CTA Section -->
+    <div class="booking-cta">
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSe1PjSvBlnFA_pisRGlyRlUu4Iyxdx6B-TGwbUuwYm97DqPAA/viewform?usp=header" target="_blank">
+            Ready to turn potential into profit? Book your hay services now!
+        </a>
+    </div>
+
     <script>
         // The data for the calculator is now embedded directly in the script.
         const data = {
@@ -174,7 +211,6 @@
         let lastCalculation = {};
 
         function formatCurrency(number) {
-            // Check if the number is valid and return 0.00 if not
             if (isNaN(number) || !isFinite(number)) {
                 return '0.00';
             }
@@ -184,9 +220,14 @@
         hayCalculatorForm.addEventListener('submit', function(event) {
             event.preventDefault();
 
+            // Get inputs
             const paddockSize = parseFloat(document.getElementById('paddockSize').value) || 1;
             const hayType = document.getElementById('hayType').value;
             const expectedGrainYield = parseFloat(document.getElementById('expectedGrainYield').value);
+            
+            // New Input: Estimated Hay Yield Per Hectare
+            const estimatedHayYieldPerHaInput = document.getElementById('estimatedHayYieldPerHa').value;
+            const estimatedHayYieldPerHa = parseFloat(estimatedHayYieldPerHaInput);
 
             if (isNaN(expectedGrainYield)) {
                 resultsDiv.innerHTML = `<p style='color:red;'>Please enter a valid number for Expected Grain Yield.</p>`;
@@ -194,8 +235,41 @@
                 return;
             }
 
-            const yieldConversionFactor = data.yield_conversions[hayType].grain_to_hay;
-            const hayYieldPerHectare = expectedGrainYield * yieldConversionFactor;
+            // --- CORE LOGIC CHANGE ---
+            let hayYieldPerHectare;
+            let yieldFactorUsed;
+            let calculationMethodMessage = "Using Default Hay/Grain Conversion Ratio";
+
+            const defaultFactor = data.yield_conversions[hayType].grain_to_hay;
+
+            // Check if a valid Estimated Hay Yield was provided
+            if (estimatedHayYieldPerHaInput.trim() !== '' && !isNaN(estimatedHayYieldPerHa) && estimatedHayYieldPerHa > 0) {
+                // SCENARIO 1: USE CLIENT'S DIRECT HAY YIELD INPUT
+                hayYieldPerHectare = estimatedHayYieldPerHa;
+                
+                // Calculate the implied factor for display/comparison
+                yieldFactorUsed = hayYieldPerHectare / expectedGrainYield; 
+                calculationMethodMessage = "Using Client's Estimated Hay Yield Per Ha";
+            } else {
+                // SCENARIO 2: USE DEFAULT CONVERSION FACTOR
+                if (isNaN(defaultFactor) || defaultFactor <= 0) {
+                    resultsDiv.innerHTML = `<p style='color:red;'>Calculation Error: The crop type has an invalid conversion factor. Please enter a yield manually.</p>`;
+                    profitSection.classList.add('hidden');
+                    return;
+                }
+                yieldFactorUsed = defaultFactor;
+                hayYieldPerHectare = expectedGrainYield * yieldFactorUsed;
+            }
+
+            // Safety check
+            if (isNaN(hayYieldPerHectare) || hayYieldPerHectare <= 0) {
+                resultsDiv.innerHTML = `<p style='color:red;'>Calculation Error: Could not determine a valid Hay Yield Per Hectare.</p>`;
+                profitSection.classList.add('hidden');
+                return;
+            }
+            // --- END CORE LOGIC CHANGE ---
+
+            // Perform final calculations
             const totalHayTonnage = paddockSize * hayYieldPerHectare;
             const totalBales = totalHayTonnage / (data.bale_size_kg / data.kg_per_tonne);
 
@@ -229,11 +303,14 @@
                 totalHayTonnage,
                 totalBales,
                 totalContractingCost,
-                expectedGrainYield
+                // Crucially, we always use the user's input for grain for the financial comparison
+                expectedGrainYield 
             };
 
             let htmlOutput = `
                 <h2>Results</h2>
+                <p><strong>Calculation Method:</strong> ${calculationMethodMessage}</p>
+                <p><strong>Implied Hay/Grain Factor:</strong> ${yieldFactorUsed.toFixed(2)}</p>
                 <p><strong>Total Paddock Yield:</strong> ${totalHayTonnage.toFixed(2)} tonnes</p>
                 <p><strong>Total Bales:</strong> ${Math.round(totalBales)} bales</p>
                 <h3>Total Cost per Hectare: $${formatCurrency(totalCostPerHectare)}</h3>
@@ -277,6 +354,7 @@
                  hayProfitPerBale = totalHayProfit / lastCalculation.totalBales;
             }
            
+            // This calculation always uses the 'expectedGrainYield' input for the comparison
             const totalGrainRevenue = lastCalculation.paddockSize * lastCalculation.expectedGrainYield * grainPricePerTonne;
 
             profitResultsDiv.innerHTML = `
