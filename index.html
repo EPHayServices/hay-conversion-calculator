@@ -148,8 +148,8 @@
 <body>
 
     <div class="logo-container">
-        <!-- Using a placeholder image for the logo, as 'logo.png' is a relative path that won't resolve outside the final environment. -->
-        <img src="https://placehold.co/150x50/006400/ffffff?text=FARM+LOGO" alt="Your Company Logo" class="logo" onerror="this.onerror=null;this.src='https://placehold.co/150x50/006400/ffffff?text=FARM+LOGO';">
+        <!-- Logo provided by the user, hosted next to index.html -->
+        <img src="logo.png" alt="Your Company Logo" class="logo">
     </div>
 
     <h1>Hay Potential Calculator</h1>
@@ -242,7 +242,7 @@
         const data = {
             "contracting_rates": {
                 "cutting": 60, // $ per hectare
-                "raking": 5,   // $ per hectare
+                "raking": 5,   // $ per hectare
                 "baling_per_bale": 28, // $ per bale
                 "freight_cost_per_km": 0.15 // Not used in current version, kept for future
             },
@@ -339,8 +339,8 @@
             
             // Parse values, defaulting grain yield to 0 if medic or simply empty and not medic
             const expectedGrainYield = (isMedic && grainYieldSection.classList.contains('hidden')) 
-                                             ? 0
-                                             : (parseFloat(expectedGrainYieldInput.value) || 0); 
+                                            ? 0
+                                            : (parseFloat(expectedGrainYieldInput.value) || 0); 
             
             const estimatedHayYieldPerHa = parseFloat(estimatedHayYieldPerHaInput.value);
 
@@ -520,8 +520,8 @@
             
             // Get Grain Price (0 if Medic is selected or if input is empty/invalid)
             const grainPricePerTonne = isMedic 
-                                             ? 0
-                                             : (parseFloat(document.getElementById('grain-price').value) || 0); 
+                                            ? 0
+                                            : (parseFloat(document.getElementById('grain-price').value) || 0); 
             
             // Grain Input Cost has been removed, so we default the opportunity cost to zero.
             const grainInputCostPerHa = 0; 
