@@ -1,608 +1,776 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hay Potential Calculator</title>
-    <style>
-        /* General Styling */
-        body {
-            font-family: 'Inter', sans-serif;
-            padding: 20px;
-            background-color: #f4f4f4;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
-            border-radius: 12px;
-        }
-        h1, h2, h3 {
-            color: #006400;
-        }
-        form {
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-        }
-        label {
-            font-weight: bold;
-            display: block;
-            margin-bottom: 5px;
-        }
-        input, select, button {
-            width: 100%;
-            padding: 10px;
-            margin-top: 5px;
-            margin-bottom: 10px;
-            border-radius: 5px;
-            border: 1px solid #ddd;
-            box-sizing: border-box;
-        }
-        
-        /* Button Styling */
-        button {
-            background-color: #006400;
-            color: white;
-            border: none;
-            cursor: pointer;
-            padding: 15px;
-            font-weight: bold;
-            transition: background-color 0.2s, transform 0.1s;
-        }
-        button:hover {
-            background-color: #005000;
-            transform: translateY(-1px);
-        }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hay Potential Calculator</title>
 
-        /* Results and Info Styling */
-        #results, #profit-section {
-            margin-top: 20px;
-            padding: 20px;
-            background-color: #e9e9e9;
-            border-radius: 8px;
-            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
-        }
-        .logo-container {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .logo {
-            max-width: 150px;
-            height: auto;
-            border-radius: 8px;
-        }
-        .small-italic {
-            font-size: 10px;
-            font-style: italic;
-            color: #666;
-        }
-        .disclaimer {
-            font-size: 12px;
-            color: #666;
-            margin-top: 30px;
-            text-align: justify;
-        }
-        .results-disclaimer {
-            font-size: 11px;
-            font-style: italic;
-            color: #666;
-            margin-top: 5px;
-        }
-        .service-option {
-            margin-bottom: 10px;
-        }
-        .hidden {
-            display: none;
-        }
+<!-- KaTeX (for formulas in the guide only) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
 
-        /* Booking CTA Styling */
-        .booking-cta {
-            text-align: center;
-            margin-top: 30px;
-            padding: 20px;
-            background-color: #008000; /* Darker green */
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-        }
-        .booking-cta a {
-            color: white;
-            font-size: 1.2em;
-            font-weight: bold;
-            text-decoration: none;
-            display: block; 
-            padding: 5px;
-            transition: background-color 0.2s;
-        }
-        .booking-cta a:hover {
-            text-decoration: underline;
-            background-color: #006400; /* Slightly darker on hover */
-        }
-        
-        /* Custom style for the calculation detail text (used for KaTeX context) */
-        .calculation-detail {
-            font-size: 0.9em;
-            color: #555;
-            margin-left: 10px;
-            display: block;
-            margin-top: 5px;
-            /* Using a common font for text around LaTeX */
-            font-family: 'Inter', sans-serif; 
-        }
-        .calculation-detail .katex {
-            font-size: 1.1em; /* Make the formula stand out */
-            margin-top: 10px;
-            margin-bottom: 10px;
-        }
+<!-- jsPDF for exporting the Yield Guide -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-        .grain-yield-section {
-            margin-bottom: 15px;
-        }
-    </style>
-    <!-- Include KaTeX for rendering mathematical formulas -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" xintegrity="sha384-GvrF9wQ4sS1n+kFqgI+0m7J3z3n6lJvEwLg3n0m5T5X0v1Y8M3M3V3Q1I0P0M0M0M0M" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" xintegrity="sha384-hJ+1+k1xS/h3V/J9V3j2wT9k2j0t/l9w/7l7V9q4zQ1I0P0M0M0M0M0M" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" xintegrity="sha384-r+lW3x2jWp2Y0j7R9oQ1B/3nJ9qP9j8n4wP5p7R3w4L3n3J9V3j2wT9k2j0t/l9w/7l7V9q4zQ1I0P0M0M0M0M0M" crossorigin="anonymous"></script>
+<style>
+  :root{
+    --green:#006400; --green-dark:#005000; --ink:#222; --muted:#6b7280;
+    --bg:#f6f7f8; --card:#ffffff; --line:#e5e7eb; --soft:#f3f4f6;
+  }
+  html,body{background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  body{margin:0; padding:16px}
+  .wrap{max-width:900px;margin:0 auto}
+  h1,h2,h3{color:var(--green);line-height:1.25;margin:0 0 .6rem}
+  h1{font-size:1.8rem} h2{font-size:1.25rem;margin-top:1.2rem} h3{font-size:1.05rem;margin-top:1rem}
+  p{line-height:1.45} .muted{color:var(--muted)} .small{font-size:.9rem} .tiny{font-size:.82rem}
+  .spacer-xs{height:6px} .spacer-sm{height:10px} .spacer{height:14px} .spacer-lg{height:18px}
 
+  .panel{background:#fff;border:1px solid var(--green);border-top:none;border-radius:0 12px 12px 12px;padding:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:0 2px 6px rgba(0,0,0,.04)}
+  .soft{background:var(--soft);border-radius:10px;padding:12px}
+
+  .tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:0}
+  .tab{white-space:nowrap;padding:10px 12px;border:1px solid var(--line);border-bottom:none;border-top-left-radius:10px;border-top-right-radius:10px;background:#f3f4f6;color:#374151;font-weight:700}
+  .tab.active{background:#fff;color:var(--green);border-color:var(--green)}
+
+  form{display:block}
+  label{display:block;font-weight:700;margin:10px 0 6px}
+  input,select,button{width:100%;box-sizing:border-box;padding:12px;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:1rem;line-height:1.2}
+  input + .hint,select + .hint{margin:6px 0 12px;color:var(--muted)}
+  .error{color:#8B0000;margin-top:6px;margin-bottom:10px;font-size:.9rem;min-height:1.1em}
+  .btn{display:block;width:100%;padding:14px;border:none;border-radius:12px;font-weight:800;cursor:pointer}
+  .btn-primary{background:var(--green);color:#fff}.btn-primary:hover{background:var(--green-dark)}
+  .btn-neutral{background:#374151;color:#fff}.btn-outline{background:#fff;border:1px solid var(--line)}
+  .btn + .btn{margin-top:8px}
+
+  .service-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px dashed var(--line)}
+  .service-item:last-child{border-bottom:none}
+  .service-item input[type=checkbox]{width:auto;margin-top:4px}
+  .service-item label{margin:0;font-weight:600}
+
+  /* Prevent bunching/overlap on mobile */
+  .stack{display:block; position:relative; clear:both; margin-block:16px;}
+  .result{background:var(--soft);border-radius:10px;padding:12px}
+  #profit-section{background:#f7f8fa;border:1px solid var(--line);border-radius:10px;padding:12px}
+  .katex, .katex-display{ line-height:1.25; margin:8px 0 !important; }
+
+  /* Conversion table */
+  .table{width:100%;border-collapse:collapse}
+  .table th,.table td{border:1px solid #e5e7eb;padding:8px;text-align:right}
+  .table th:first-child,.table td:first-child{text-align:left}
+  .sticky-head{position:sticky;top:0;background:#fff}
+  .rowcard{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff;margin-bottom:12px}
+  .rowhead{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .rowtitle{font-weight:800;color:var(--green);text-transform:capitalize}
+  .factor-ctrl{display:flex;gap:10px;align-items:center;margin-top:8px}
+  .factor-ctrl input[type=range]{flex:1}
+  .micro{font-size:.75rem;color:var(--muted)}
+
+  .callout{background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:12px}
+  .callout h3{margin:0 0 .5rem;color:#006400;font-size:1.05rem}
+  .step-list{margin:.5rem 0 0 1rem;padding:0} .step-list li{margin:.5rem 0}
+  .badge{display:inline-block;background:#e6f6e6;color:#065f46;border:1px solid #b7ebc0;padding:.15rem .5rem;border-radius:999px;font-size:.78rem;font-weight:700}
+  .sample{border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px;background:#fff}
+  .actions-row{display:flex;gap:8px;flex-wrap:wrap}
+
+  .logo-box{text-align:center;margin-bottom:12px}.logo{max-width:150px;height:auto;border-radius:10px}
+
+  @media (min-width:920px){.panel{padding:20px}}
+  @media print{.tabs,.btn{display:none !important}.panel{border-color:#ddd}}
+</style>
 </head>
 <body>
+<div class="wrap">
 
-    <div class="logo-container">
-        <!-- Logo provided by the user, hosted next to index.html -->
-        <img src="logo.png" alt="Your Company Logo" class="logo">
-    </div>
+  <div class="logo-box">
+    <img src="logo.png" alt="Logo" class="logo">
+  </div>
 
+  <div class="tabs">
+    <button class="tab active" id="tab-calculator">Calculator</button>
+    <button class="tab" id="tab-guide">Yield Guide</button>
+    <button class="tab" id="tab-conv">Conversion Table</button>
+  </div>
+
+  <!-- ===== Calculator ===== -->
+  <div class="panel" id="panel-calculator">
     <h1>Hay Potential Calculator</h1>
-    
-    <form id="hayCalculator">
-        <h2>Enter Paddock Details</h2>
-        
-        <label for="paddockSize">Hectares:</label>
-        <input type="number" id="paddockSize" placeholder="100"><br>
-        <p class="small-italic">To find out costs per 1 bale, leave the Hectares section blank, but you still need to fill in yield details.</p><br>
 
-        <label for="hayType">Crop Type:</label>
-        <select id="hayType" required>
-            <option value="wheat">Wheat</option>
-            <option value="barley">Barley</option>
-            <option value="oats">Oats</option>
-            <option value="vetch">Vetch</option>
-            <option value="medic">Medic</option>
-        </select><br><br>
+    <form id="hayCalculator" novalidate>
+      <h2>Enter Paddock Details</h2>
 
-        <!-- WRAPPING THE GRAIN YIELD SECTION IN A DIV FOR EASY HIDING -->
-        <div id="grainYieldSection" class="grain-yield-section">
-            <label for="expectedGrainYield">Expected Grain Yield (Tonnes per Hectare):</label>
-            <input type="number" id="expectedGrainYield" step="any" placeholder="3.5"><br><br>
-        </div>
-        
-        <label for="estimatedHayYieldPerHa">Estimated Hay Yield (Tonnes per Hectare):</label>
-        <input type="number" id="estimatedHayYieldPerHa" step="any" placeholder="Leave blank to use conversion defaults">
-        <p class="small-italic">Enter your estimated hay yield per hectare. If left blank (and the crop is a grain), the calculator will use the default Hay/Grain conversion ratio derived from the Expected Grain Yield.</p><br>
+      <label for="paddockSize">Hectares</label>
+      <input type="number" id="paddockSize" placeholder="100" step="any" inputmode="decimal">
+      <div class="hint tiny">Leave blank for single-bale mode (we assume 1 ha internally but show per-bale costs).</div>
+      <div id="err-hectares" class="error"></div>
 
+      <label for="hayType">Crop Type</label>
+      <select id="hayType" required>
+        <option value="wheat">Wheat</option>
+        <option value="barley">Barley</option>
+        <option value="oats">Oats</option>
+        <option value="vetch">Vetch</option>
+        <option value="medic">Medic</option>
+      </select>
+      <div id="err-crop" class="error"></div>
 
-        <h2>Select Services Required</h2>
-        <div id="service-options">
-            <div class="service-option">
-                <input type="checkbox" id="service-mowing" value="mowing" checked>
-                <label for="service-mowing" style="display:inline;">Mowing - DC163 Case IH Mower Conditioner or SP Mower</label>
-            </div>
-            <div class="service-option">
-                <input type="checkbox" id="service-raking" value="raking" checked>
-                <label for="service-raking" style="display:inline;">Raking - [Placeholder for your new rake]</label>
-            </div>
-            <div class="service-option">
-                <input type="checkbox" id="service-baling" value="baling" checked>
-                <label for="service-baling" style="display:inline;">Baling - Krone HD Baler (750kg per bale)</label>
-            </div>
-        </div>
-        <p class="small-italic">*Client to provide diesel, cost factor has been included into the costs per bale</p><br>
+      <div id="grainYieldSection">
+        <label for="expectedGrainYield">Expected Grain Yield (t/ha)</label>
+        <input type="number" id="expectedGrainYield" step="any" placeholder="3.5" inputmode="decimal">
+        <div class="hint tiny">Optional for grain crops if you provide a manual hay yield below.</div>
+        <div id="err-grain" class="error"></div>
+      </div>
 
-        <button type="submit">Calculate</button>
+      <label for="estimatedHayYieldPerHa">Estimated Hay Yield (t/ha)</label>
+      <input type="number" id="estimatedHayYieldPerHa" step="any" placeholder="Leave blank to use conversion defaults" inputmode="decimal">
+      <div class="hint tiny">Required for Medic. For grain crops, you can enter this to override conversion.</div>
+      <div id="err-hay" class="error"></div>
+
+      <h2>Services Required</h2>
+      <p class="tiny muted">*Client to provide diesel; allowance included in costs per bale.</p>
+
+      <div class="service-item">
+        <input type="checkbox" id="service-mowing" checked>
+        <label for="service-mowing">Mowing — DC163 Case IH Mower Conditioner / SP Mower</label>
+      </div>
+      <div class="service-item">
+        <input type="checkbox" id="service-raking" checked>
+        <label for="service-raking">Raking</label>
+      </div>
+      <div class="service-item">
+        <input type="checkbox" id="service-baling" checked>
+        <label for="service-baling">Baling — Krone HD Baler (750 kg per bale)</label>
+      </div>
+
+      <div class="spacer"></div>
+      <button class="btn btn-primary" type="submit" id="btn-calc">Calculate</button>
+      <button class="btn btn-outline" type="button" id="btn-print">Print / Save PDF</button>
+      <button class="btn btn-neutral" type="button" id="btn-reset">Reset</button>
     </form>
 
-    <div id="results"></div>
-
-    <div id="profit-section" class="hidden">
-        <hr>
-        <h2>Hay Market Returns & Profit Comparison</h2>
-        <p>Calculate your potential profit. **Please input farm gate prices (prices after considering freight to market).**</p>
-        
-        <label for="hay-price">Current Hay Price ($ per tonne):</label>
-        <input type="number" id="hay-price" step="any" placeholder="e.g., 200"><br>
-        
-        <!-- WRAPPED GRAIN FINANCIALS SECTION FOR HIDING WITH MEDIC -->
-        <div id="grainFinancialsSection"> 
-            <label for="grain-price">Current Grain Price ($ per tonne):</label>
-            <input type="number" id="grain-price" step="any" placeholder="e.g., 300"><br>
-            
-            <!-- REMOVED: NEW INPUT: GRAIN INPUT COSTS -->
-            <!-- Removed the grain-input-cost input and associated description -->
-        </div>
-        
-        <button id="calculate-profit-btn" type="button">Calculate Profit</button>
-        <div id="profit-results"></div>
+    <div id="mode-note" class="tiny muted stack" style="display:none;">
+      Single-bale mode: hectares were blank, so results emphasise per-bale figures.
     </div>
 
-    <p class="disclaimer">
-        *This Hay Potential Calculator is for estimation purposes only. The results are based on our contracting costs and a yield conversion model. Actual paddock yield and financial returns can vary significantly due to local conditions, soil types, farming practices, and market fluctuations. These figures should be used as a guide and not a guarantee. We recommend seeking professional advice before making financial decisions.*
-    </p>
+    <div id="results" class="stack"></div>
 
-    <!-- New CTA Section -->
-    <div class="booking-cta">
-        <a href="https://docs.google.com/forms/d/e/1FAIpQLSe1PjSvBlnFA_pisRGlyRlUu4Iyxdx6B-TGwbUuwYm97DqPAA/viewform?usp=header" target="_blank">
-            Ready to turn potential into profit? Book your hay services now!
-        </a>
+    <div id="profit-section" class="stack" style="display:none">
+      <h2>Hay Market Returns & Profit Comparison</h2>
+      <p class="small">Enter <strong>farm-gate</strong> prices (after freight).</p>
+
+      <label for="hay-price">Hay Price ($/t)</label>
+      <input type="number" id="hay-price" step="any" inputmode="decimal" placeholder="e.g., 200">
+      <div id="err-hayprice" class="error"></div>
+
+      <div id="grainFinancialsSection">
+        <label for="grain-price">Grain Price ($/t)</label>
+        <input type="number" id="grain-price" step="any" inputmode="decimal" placeholder="e.g., 300">
+        <div id="err-grainprice" class="error"></div>
+      </div>
+
+      <button class="btn btn-primary" id="calculate-profit-btn" type="button">Calculate Profit</button>
+      <div id="profit-results" class="stack"></div>
+    </div>
+  </div>
+
+  <!-- ===== Yield Guide ===== -->
+  <div class="panel" id="panel-guide" style="display:none">
+    <h2>Dry Matter (DM) Cut &amp; Weigh — How to Collect Data</h2>
+
+    <div class="callout">
+      <h3>What you need</h3>
+      <ul class="step-list">
+        <li>✅ <strong>1 m × 1 m quadrat</strong> (PVC or string frame)</li>
+        <li>✅ <strong>Sharp shears/knife</strong> &amp; bucket/bag for clippings</li>
+        <li>✅ <strong>Scales</strong> (gram accuracy) — one for field (portable) and one for bench</li>
+        <li>✅ <strong>Microwave</strong> <em>or</em> forced-air oven (bench step)</li>
+        <li>✅ Heat-safe dish, paper towel, notebook/phone</li>
+      </ul>
     </div>
 
-    <script>
-        // Configuration Constants
-        const EFFICIENCY = 0.75; // 75% hay recovery efficiency (used in derivation)
+    <div class="spacer-xs"></div>
 
-        const data = {
-            "contracting_rates": {
-                "cutting": 60, // $ per hectare
-                "raking": 5,   // $ per hectare
-                "baling_per_bale": 28, // $ per bale
-                "freight_cost_per_km": 0.15 // Not used in current version, kept for future
-            },
-            // Conversion factors derived from Harvest Index (HI) and 75% efficiency
-            "yield_conversions": {
-                // Factor = (1 / HI - 1) * Efficiency
-                "wheat": { "hi": 0.40, "factor": 1.5 }, // Corrected factor for (1/.4 - 1) * .75 = 1.5
-                "barley": { "hi": 0.52, "factor": 0.826 }, // Corrected factor for (1/.52 - 1) * .75 = 0.826
-                "oats": { "hi": 0.34, "factor": 1.838 }, // Corrected factor for (1/.34 - 1) * .75 = 1.838
-                "vetch": { "hi": 0.30, "factor": 1.75 }, // Corrected factor for (1/.3 - 1) * .75 = 1.75
-                "medic": { "hi": 0.214, "factor": 2.76 } // Default factor for medic if no hay yield is given (though validation forces manual entry for medic)
-            },
-            "bale_size_kg": 750,
-            "kg_per_tonne": 1000
-        };
+    <div class="callout">
+      <h3>Where &amp; when to sample</h3>
+      <ul class="step-list">
+        <li><strong>Choose 3–5 representative spots</strong> across the paddock (avoid headlands, bare patches, unusually lush drains).</li>
+        <li><strong>Timing:</strong> when you’re deciding whether to cut — typically late boot to early heading for cereals; avoid sampling after rain or heavy dew if possible.</li>
+      </ul>
+    </div>
 
-        // DOM References
-        const hayCalculatorForm = document.getElementById('hayCalculator');
-        const hayTypeSelect = document.getElementById('hayType');
-        const grainYieldSection = document.getElementById('grainYieldSection'); 
-        const resultsDiv = document.getElementById('results');
-        const profitSection = document.getElementById('profit-section');
-        const calculateProfitBtn = document.getElementById('calculate-profit-btn');
-        const profitResultsDiv = document.getElementById('profit-results');
-        
-        const expectedGrainYieldInput = document.getElementById('expectedGrainYield'); 
-        const estimatedHayYieldPerHaInput = document.getElementById('estimatedHayYieldPerHa'); 
-        const grainFinancialsSection = document.getElementById('grainFinancialsSection'); 
+    <div class="spacer-xs"></div>
 
-        let lastCalculation = {};
+    <div class="callout">
+      <h3>Field steps (for each sample)</h3>
+      <ol class="step-list">
+        <li><strong>Place quadrat.</strong> Lay the 1 m² frame on representative crop; note the planned cutting height.</li>
+        <li><strong>Cut everything inside the frame</strong> at that height. Include stems + leaves; exclude stones and soil.</li>
+        <li><strong>Weigh immediately:</strong> record <strong>W<sub>wet</sub></strong> (total wet biomass in grams) to reduce moisture drift.</li>
+        <li><strong>Take a sub-sample</strong> (~100 g) from the cut biomass; record its wet weight <strong>S<sub>wet</sub></strong> (g).</li>
+      </ol>
+    </div>
 
-        /**
-         * Toggles the visibility of the Expected Grain Yield and Grain Financials sections
-         * when a non-grain crop (like Medic) is selected.
-         * The 'required' attributes are now managed entirely by the submit validation logic.
-         */
-        function toggleGrainYieldVisibility() {
-            const isMedic = hayTypeSelect.value === 'medic';
-            
-            if (isMedic) {
-                // Hide Grain Yield Input (required for conversion)
-                grainYieldSection.classList.add('hidden');
-                
-                // Hide Grain Financials Section (not relevant for comparison)
-                grainFinancialsSection.classList.add('hidden'); 
-            } else {
-                // Show both sections for grain crops
-                grainYieldSection.classList.remove('hidden');
-                
-                grainFinancialsSection.classList.remove('hidden'); 
-            }
-        }
-        
-        // Listeners and initial setup
-        hayTypeSelect.addEventListener('change', toggleGrainYieldVisibility);
-        
-        window.onload = function() {
-            toggleGrainYieldVisibility();
-            // Initialize KaTeX rendering for the entire body
-            if (typeof renderMathInElement !== 'undefined') {
-                renderMathInElement(document.body, {
-                    delimiters: [
-                        {left: "$$", right: "$$", display: true},
-                        {left: "$", right: "$", display: false}
-                    ]
-                });
-            }
-        };
+    <div class="spacer-xs"></div>
 
+    <div class="callout">
+      <h3>Bench steps (determine Dry Matter %)</h3>
+      <ol class="step-list">
+        <li><strong>Dry the sub-sample</strong> to constant weight:
+          <ul>
+            <li><em>Microwave:</em> 1–2 min bursts, cool 1 min, re-weigh; repeat until change &lt; 0.5 g. <span class="badge">Caution</span> Don’t scorch.</li>
+            <li><em>Oven:</em> 60–65 °C with airflow, usually overnight; weigh after cooling in a dry container.</li>
+          </ul>
+        </li>
+        <li>Record <strong>S<sub>dry</sub></strong> (g), then compute Dry Matter:
+          <div class="tiny muted">$$ \\text{DM}\\% = \\frac{S_{\\text{dry}}}{S_{\\text{wet}}} \\times 100 $$</div>
+        </li>
+        <li>Apply DM% to the field sample to get dry mass per m²:
+          <div class="tiny muted">$$ W_{\\text{dry}}(\\text{g}) = W_{\\text{wet}}(\\text{g}) \\times \\frac{\\text{DM}\\%}{100} $$</div>
+        </li>
+        <li>Convert to yield (t/ha):
+          <div class="tiny muted">$$ \\text{DM Yield (t/ha)} = \\frac{W_{\\text{dry}}(\\text{g})}{100} $$</div>
+        </li>
+      </ol>
+      <p class="tiny muted"><strong>Tip:</strong> “Constant weight” = two successive weighings (after cool-down) differ by &lt;0.5–1 g.</p>
+    </div>
 
-        /**
-         * Formats a number as currency string with two decimal places.
-         * @param {number} number The number to format.
-         * @returns {string} The formatted string.
-         */
-        function formatCurrency(number) {
-            if (isNaN(number) || !isFinite(number)) {
-                return '0.00';
-            }
-            return new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(number);
-        }
+    <div class="spacer"></div>
 
-        // --- Main Calculation Logic ---
-        hayCalculatorForm.addEventListener('submit', function(event) {
-            event.preventDefault();
+    <h2>Enter Your Samples</h2>
+    <p class="small">Add 3–10 samples. The guide computes <strong>DM%</strong>, <strong>W<sub>dry</sub></strong>, and <strong>DM yield (t/ha)</strong> per sample, then averages across samples. Your inputs are saved until you clear them.</p>
 
-            // Paddock Size defaults to 1 if empty, allowing for Cost Per Bale calculation
-            const paddockSize = parseFloat(document.getElementById('paddockSize').value) || 1;
-            const hayType = hayTypeSelect.value;
-            const isMedic = hayType === 'medic';
-            
-            const estimatedHayYieldInputFilled = estimatedHayYieldPerHaInput.value.trim() !== '';
-            const expectedGrainYieldInputFilled = expectedGrainYieldInput.value.trim() !== '';
-            
-            // Parse values, defaulting grain yield to 0 if medic or simply empty and not medic
-            const expectedGrainYield = (isMedic && grainYieldSection.classList.contains('hidden')) 
-                                            ? 0
-                                            : (parseFloat(expectedGrainYieldInput.value) || 0); 
-            
-            const estimatedHayYieldPerHa = parseFloat(estimatedHayYieldPerHaInput.value);
+    <div id="samples"></div>
+    <div class="actions-row">
+      <button class="btn btn-outline" id="add-sample" type="button">Add Sample</button>
+      <button class="btn btn-outline" id="clear-samples" type="button">Clear Samples</button>
+      <button class="btn btn-outline" id="export-yield-pdf" type="button">Export PDF</button>
+    </div>
 
-            // --- Validation ---
+    <div class="spacer-sm"></div>
+    <div class="card soft" id="dm-summary">
+      <div><strong>Average DM Yield:</strong> <span id="avg-dm-yield">0.00</span> t/ha</div>
+      <div class="tiny muted">Formulas above: \( W_{\text{dry}} = W_{\text{wet}} \times \frac{\text{DM}\%}{100} \); \( \text{DM t/ha} = \frac{W_{\text{dry}}}{100} \)</div>
+      <div class="spacer-xs"></div>
+      <button class="btn btn-primary" id="push-to-calculator" type="button">Use this yield in Calculator</button>
+    </div>
+  </div>
 
-            // 1. Validation for Grain Crops (Wheat, Barley, Oats, Vetch)
-            if (!isMedic) {
-                // A grain crop requires EITHER a manual Hay Yield OR an Expected Grain Yield.
-                if (!estimatedHayYieldInputFilled && (!expectedGrainYieldInputFilled || expectedGrainYield <= 0)) {
-                    resultsDiv.innerHTML = `<p style='color:red;'>To calculate yield for a **${hayType.charAt(0).toUpperCase() + hayType.slice(1)}** crop, please provide a valid number greater than 0 for **Expected Grain Yield (to use conversion)** OR enter an **Estimated Hay Yield (to bypass conversion)**.</p>`;
-                    profitSection.classList.add('hidden');
-                    return;
-                }
-            }
+  <!-- ===== Conversion Table ===== -->
+  <div class="panel" id="panel-conv" style="display:none">
+    <h2>Conversion Table (Grain → Hay)</h2>
 
-            // 2. Validation for Medic Crop (Requires manual Hay Yield)
-            if (isMedic && (!estimatedHayYieldInputFilled || isNaN(estimatedHayYieldPerHa) || estimatedHayYieldPerHa <= 0)) {
-                resultsDiv.innerHTML = `<p style='color:red;'>Since **Medic** is not a grain crop, you must provide a valid number greater than 0 for the **Estimated Hay Yield (Tonnes per Hectare)** to proceed.</p>`;
-                profitSection.classList.add('hidden');
-                return;
-            }
-            
-            // --- Determine Hay Yield Per Hectare ---
-            let hayYieldPerHectare;
-            let yieldFactorUsed = 0; 
-            let conversionDetail = "";
-            let calculationMethodMessage = "";
+    <div class="card soft" style="margin-bottom:12px">
+      <h3 style="margin-top:0">How to use this table</h3>
+      <p class="small">
+        This table converts <strong>grain yield</strong> (t/ha) into <strong>potential hay yield</strong> (t/ha) with a
+        per-crop <em>Conversion Factor</em> that you can adjust. Use the slider (or number box) beside each crop to reflect
+        your local conditions. The default factors match your spreadsheet and will be used by the main Calculator whenever
+        “Estimated Hay Yield” is left blank.
+      </p>
 
-            const conversionData = data.yield_conversions[hayType];
-            const defaultFactor = conversionData.factor;
-            const hiUsed = conversionData.hi;
+      <p class="small">Core relationship:</p>
+      <div class="tiny muted">$$ \text{Hay Yield (t/ha)} \;=\; \text{Grain Yield (t/ha)} \times \text{Conversion Factor} $$</div>
 
-            // SCENARIO 1: USE CLIENT'S DIRECT HAY YIELD INPUT (Overrides default conversion)
-            if (estimatedHayYieldInputFilled && !isNaN(estimatedHayYieldPerHa) && estimatedHayYieldPerHa > 0) {
-                hayYieldPerHectare = estimatedHayYieldPerHa;
-                calculationMethodMessage = "Using Client's Estimated Hay Yield Per Ha (Manual Entry)";
-                
-                // Calculate implied factor only if grain yield was provided AND > 0
-                if (expectedGrainYield > 0) {
-                    yieldFactorUsed = hayYieldPerHectare / expectedGrainYield; 
-                } else if (isMedic) {
-                    // For Medic with manual entry, there is no implied factor from grain
-                    yieldFactorUsed = 0; 
-                }
+      <h3>Where the factors come from</h3>
+      <p class="small">
+        We start from the crop’s <strong>Harvest Index (HI)</strong>, the fraction of total above-ground dry matter that ends up as grain:
+      </p>
+      <div class="tiny muted">$$ \mathrm{HI} \;=\; \frac{\text{Grain DM}}{\text{Grain DM} + \text{Straw/Residue DM}} $$</div>
+      <p class="small">Rearranging gives the non-grain biomass relative to grain:</p>
+      <div class="tiny muted">$$ \frac{\text{Straw DM}}{\text{Grain DM}} \;=\; \left(\frac{1}{\mathrm{HI}} - 1\right) $$</div>
+      <p class="small">
+        Not all biomass is recovered into bales. Let <strong>E</strong> be field recovery efficiency (covers cutting/raking/baling losses).
+        A simple theoretical factor is:
+      </p>
+      <div class="tiny muted">$$ \text{Factor}_\text{theoretical} \;=\; \left(\frac{1}{\mathrm{HI}} - 1\right) \times E $$</div>
+      <p class="small">
+        The <strong>default factors</strong> here (Wheat 1.9, Barley 1.7, Oats 2.3, Vetch 2.6, Medic 2.6) are calibrated to your
+        historical results and spreadsheet—not a single HI/E pair—so they already account for cutting height, leaf/head capture,
+        swath density and typical operating practice. Adjust the sliders to suit your paddock; press <em>Save Factors</em> to reuse
+        them across the Calculator, or <em>Reset Defaults</em> to restore the spreadsheet values.
+      </p>
 
-                conversionDetail = `<span class="calculation-detail">Yield input directly by client. No default conversion factor was applied.</span>`;
+      <h3>Columns</h3>
+      <ul class="small" style="margin-top:.25rem">
+        <li><strong>Grain (t/ha):</strong> reference yields (0.5 → 5.0).</li>
+        <li><strong>Hay (t/ha):</strong> Grain × Factor.</li>
+        <li><strong>Bales/ha:</strong> \( \text{Hay} / 0.75 \) (750 kg bale).</li>
+        <li><strong>Cost/ha ($):</strong> Cutting $60/ha + Raking $5/ha + Baling $28/bale × Bales.</li>
+        <li><strong>Cost/bale ($):</strong> \( \text{Cost/ha} \div \text{Bales} \).</li>
+      </ul>
+    </div>
 
-            } else {
-                // SCENARIO 2: USE DEFAULT CONVERSION FACTOR (Only applicable for grain crops with grain yield provided)
-                
-                if (isMedic) {
-                    // This block should not be hit if validation is correct, but as a safe fallback:
-                    resultsDiv.innerHTML = `<p style='color:red;'>Error: Medic requires a manual Hay Yield input as it has no standard Grain Yield baseline.</p>`;
-                    profitSection.classList.add('hidden');
-                    return;
-                }
+    <div id="conv-rows"></div>
 
-                if (isNaN(defaultFactor) || defaultFactor <= 0 || expectedGrainYield <= 0) {
-                    // This error means the validation in Step 1 failed to catch an issue.
-                    resultsDiv.innerHTML = `<p style='color:red;'>Calculation Error: Invalid crop data or missing grain yield.</p>`;
-                    profitSection.classList.add('hidden');
-                    return;
-                }
+    <div class="actions-row">
+      <button class="btn btn-primary" id="save-factors" type="button">Save Factors</button>
+      <button class="btn btn-outline" id="reset-factors" type="button">Reset Defaults</button>
+    </div>
 
-                yieldFactorUsed = defaultFactor;
-                hayYieldPerHectare = expectedGrainYield * yieldFactorUsed;
-                calculationMethodMessage = "Using Default Hay/Grain Conversion Ratio";
+    <div class="spacer-sm"></div>
+    <div class="micro">Rates used: Cutting $60/ha • Raking $5/ha • Baling $28/bale • Bale size 0.75 t</div>
+  </div>
 
-                // Detailed conversion explanation with KaTeX formula
-                conversionDetail = `
-                    <span class="calculation-detail">
-                        <strong style="color: #006400;">Understanding the Conversion:</strong><br>
-                        We use the crop's **Harvest Index (HI)** to estimate the total dry matter. The HI for ${hayType} is typically **${hiUsed.toFixed(3)}**.
-                        <br><br>
-                        The conversion factor (**${yieldFactorUsed.toFixed(2)}**) is derived from the HI, factoring in a **${EFFICIENCY * 100}% Hay Recovery Efficiency** to account for field losses.
-                    </span>
-                    <span class="calculation-detail" style="font-weight: bold; margin-top: 10px;">
-                        $$ \\text{Hay Yield/ha} = \\text{Grain Yield/ha} \\times \\text{Factor} = ${expectedGrainYield.toFixed(2)} \\times ${yieldFactorUsed.toFixed(2)} = ${hayYieldPerHectare.toFixed(2)} \\text{ t/ha} $$
-                    </span>
-                `;
-            }
+  <div class="spacer"></div>
+  <div class="card soft tiny muted">
+    *Estimates only. Actual paddock results and market returns vary. Not financial advice.
+  </div>
+</div>
 
-            // Safety check 
-            if (isNaN(hayYieldPerHectare) || hayYieldPerHectare <= 0) {
-                resultsDiv.innerHTML = `<p style='color:red;'>Calculation Error: Could not determine a valid Hay Yield Per Hectare.</p>`;
-                profitSection.classList.add('hidden');
-                return;
-            }
+<script>
+/* =========================
+   Global Config & Defaults
+=========================*/
+const RATES = { cutting_per_ha:60, raking_per_ha:5, baling_per_bale:28 }; // change baling here if needed
+const BALE_TONNES = 0.75;  // 750 kg per bale
 
-            // --- Cost and Total Yield Calculations ---
-            const totalHayTonnage = paddockSize * hayYieldPerHectare;
-            const totalBales = totalHayTonnage / (data.bale_size_kg / data.kg_per_tonne);
+const DEFAULT_FACTORS = { wheat:1.9, barley:1.7, oats:2.3, vetch:2.6, medic:2.6 };
+const GRAIN_STEPS = [0.5,1,1.5,2,2.5,3,3.5,4,4.5,5];
 
-            let totalContractingCost = 0;
-            const mowingCheckbox = document.getElementById('service-mowing');
-            const rakingCheckbox = document.getElementById('service-raking');
-            const balingCheckbox = document.getElementById('service-baling');
+/* Tabs */
+const tabCalc = document.getElementById('tab-calculator');
+const tabGuide = document.getElementById('tab-guide');
+const tabConv  = document.getElementById('tab-conv');
+const pCalc = document.getElementById('panel-calculator');
+const pGuide = document.getElementById('panel-guide');
+const pConv = document.getElementById('panel-conv');
 
-            // Cost per hectare services (mowing, raking)
-            if (mowingCheckbox.checked) {
-                totalContractingCost += paddockSize * data.contracting_rates.cutting;
-            }
-            if (rakingCheckbox.checked) {
-                totalContractingCost += paddockSize * data.contracting_rates.raking;
-            }
-            // Cost per bale service (baling)
-            if (balingCheckbox.checked) {
-                totalContractingCost += totalBales * data.contracting_rates.baling_per_bale;
-            }
+function activate(tab){
+  [tabCalc,tabGuide,tabConv].forEach(t=>t.classList.remove('active'));
+  [pCalc,pGuide,pConv].forEach(p=>p.style.display='none');
+  if(tab==='calc'){ tabCalc.classList.add('active'); pCalc.style.display='block'; }
+  if(tab==='guide'){ tabGuide.classList.add('active'); pGuide.style.display='block'; }
+  if(tab==='conv'){ tabConv.classList.add('active'); pConv.style.display='block'; }
+}
+tabCalc.onclick = ()=>activate('calc');
+tabGuide.onclick = ()=>activate('guide');
+tabConv.onclick  = ()=>activate('conv');
 
-            let costPerBale = 0;
-            let totalCostPerHectare = 0;
+/* Factors persistence */
+function loadFactors(){
+  const raw = localStorage.getItem('convFactors');
+  if(!raw) return {...DEFAULT_FACTORS};
+  try{ const obj = JSON.parse(raw); return {...DEFAULT_FACTORS, ...obj}; } catch { return {...DEFAULT_FACTORS}; }
+}
+function saveFactors(f){ localStorage.setItem('convFactors', JSON.stringify(f)); }
+function resetFactors(){ localStorage.removeItem('convFactors'); }
+let FACTORS = loadFactors();
 
-            if (totalBales > 0) {
-                costPerBale = totalContractingCost / totalBales;
-            }
-            if (paddockSize > 0) {
-                totalCostPerHectare = totalContractingCost / paddockSize;
-            }
+/* Conversion Table UI */
+const convRows = document.getElementById('conv-rows');
 
-            // Store results for the Profit calculation stage
-            lastCalculation = {
-                paddockSize,
-                hayYieldPerHectare, // Store this for later
-                totalHayTonnage,
-                totalBales,
-                totalContractingCost,
-                expectedGrainYield, // Will be 0 if Medic or if left blank and manual hay yield was used
-            };
+function renderConvCard(crop){
+  const f = FACTORS[crop];
+  const card = document.createElement('div');
+  card.className = 'rowcard';
+  card.dataset.crop = crop;
+  card.innerHTML = `
+    <div class="rowhead">
+      <div class="rowtitle">${crop}</div>
+      <div style="text-align:right"><strong>Factor:</strong> <span class="factor-val">${f.toFixed(2)}</span>×</div>
+    </div>
+    <div class="factor-ctrl">
+      <input type="range" min="0.50" max="3.00" step="0.01" value="${f}" class="f-range">
+      <input type="number" min="0.5" max="3.0" step="0.01" value="${f}" class="f-num" style="width:110px" inputmode="decimal">
+    </div>
+    <div class="spacer-xs"></div>
+    <div class="soft">
+      <div class="micro"><strong>Table:</strong> Grain yield × Factor → Hay t/ha & bales/ha. Costs use rates above.</div>
+      <div class="spacer-xs"></div>
+      <div class="table-wrap"></div>
+    </div>
+  `;
+  buildSmallTable(card, crop);
+  const range = card.querySelector('.f-range');
+  const num = card.querySelector('.f-num');
+  const out = card.querySelector('.factor-val');
+  function setFactor(val){
+    const v = Math.max(0.5, Math.min(3.0, Number(val)||DEFAULT_FACTORS[crop]));
+    range.value = v.toFixed(2); num.value = v.toFixed(2); out.textContent = v.toFixed(2);
+    FACTORS[crop] = v;
+    buildSmallTable(card, crop);
+  }
+  range.addEventListener('input', e=>setFactor(e.target.value));
+  num.addEventListener('input', e=>setFactor(e.target.value));
+  return card;
+}
 
-            let factorDisplay = (yieldFactorUsed > 0 && !isMedic) ? `<p><strong>Implied Hay/Grain Factor:</strong> ${yieldFactorUsed.toFixed(2)}</p>` : '';
-            
-            let htmlOutput = `
-                <h2>Results</h2>
-                <p><strong>Estimated Hay Yield:</strong> ${hayYieldPerHectare.toFixed(2)} t/ha</p>
-                <p><strong>Calculation Method:</strong> ${calculationMethodMessage}</p>
-                ${conversionDetail}
-                ${factorDisplay}
-                <hr style="margin-top:15px; margin-bottom: 15px;">
-                <p><strong>Total Paddock Yield:</strong> ${totalHayTonnage.toFixed(2)} tonnes</p>
-                <p><strong>Total Bales:</strong> ${Math.round(totalBales)} bales</p>
-                <h3>Total Contracting Cost per Hectare: $${formatCurrency(totalCostPerHectare)}</h3>
-                <h3>Estimated Cost per Bale (Contracting): $${formatCurrency(costPerBale)}</h3>
-            `;
-            
-            if (document.getElementById('paddockSize').value !== '') {
-                htmlOutput += `
-                    <hr>
-                    <h3>Working Out:</h3>
-                    <p><strong>Paddock Size:</strong> ${paddockSize} hectares</p>
-                    <p><strong>Total Estimated Contracting Cost:</strong> $${formatCurrency(totalContractingCost)}</p>
-                    <p class="results-disclaimer">
-                        This figure is an estimate and not a final invoice amount. The final cost may vary due to on-site conditions, variations in service, and other factors.
-                    </p>
-                `;
-            }
-            
-            resultsDiv.innerHTML = htmlOutput;
-            // Re-render KaTeX elements specifically in the results div
-            if (typeof renderMathInElement !== 'undefined') {
-                renderMathInElement(resultsDiv, {
-                    delimiters: [
-                        {left: "$$", right: "$$", display: true},
-                        {left: "$", right: "$", display: false}
-                    ]
-                });
-            }
-            profitSection.classList.remove('hidden');
-            profitResultsDiv.innerHTML = ''; // Clear previous profit results
-        });
+function buildSmallTable(card, crop){
+  const f = FACTORS[crop];
+  const wrap = card.querySelector('.table-wrap');
+  const tbl = document.createElement('table');
+  tbl.className='table';
+  tbl.innerHTML = `
+    <thead class="sticky-head">
+      <tr>
+        <th>Grain (t/ha)</th>
+        <th>Hay (t/ha)</th>
+        <th>Bales/ha</th>
+        <th>Cost/ha ($)</th>
+        <th>Cost/bale ($)</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${GRAIN_STEPS.map(g=>{
+        const hay = g * f;
+        const bales = hay / BALE_TONNES;
+        const costHa = RATES.cutting_per_ha + RATES.raking_per_ha + (bales * RATES.baling_per_bale);
+        const costPerBale = bales>0 ? (costHa / bales) : 0;
+        return `<tr>
+          <td>${g.toFixed(1)}</td>
+          <td>${hay.toFixed(2)}</td>
+          <td>${bales.toFixed(3)}</td>
+          <td>${costHa.toFixed(2)}</td>
+          <td>${costPerBale.toFixed(2)}</td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  `;
+  wrap.innerHTML = '';
+  wrap.appendChild(tbl);
+}
 
-        // --- Profit Calculation Logic ---
-        calculateProfitBtn.addEventListener('click', function() {
-            const hayPricePerTonne = parseFloat(document.getElementById('hay-price').value);
-            const hayType = hayTypeSelect.value;
-            const isMedic = hayType === 'medic';
-            
-            // Get Grain Price (0 if Medic is selected or if input is empty/invalid)
-            const grainPricePerTonne = isMedic 
-                                            ? 0
-                                            : (parseFloat(document.getElementById('grain-price').value) || 0); 
-            
-            // Grain Input Cost has been removed, so we default the opportunity cost to zero.
-            const grainInputCostPerHa = 0; 
-            const totalGrainInputCosts = 0; // Total opportunity cost is now fixed at $0
+function renderConvTab(){
+  convRows.innerHTML='';
+  ['wheat','barley','oats','vetch','medic'].forEach(crop=>{
+    convRows.appendChild(renderConvCard(crop));
+  });
+}
 
-            // Validation check for Hay price
-            if (Object.keys(lastCalculation).length === 0 || isNaN(hayPricePerTonne) || hayPricePerTonne <= 0) {
-                profitResultsDiv.innerHTML = `<p style='color:red;'>Please run the main calculation and enter a valid price greater than 0 for **Hay**.</p>`;
-                return;
-            }
-            
-            // If NOT medic AND grain yield was calculated/used, we must ensure grain price is valid for comparison.
-            if (!isMedic && lastCalculation.expectedGrainYield > 0 && (isNaN(parseFloat(document.getElementById('grain-price').value)) || parseFloat(document.getElementById('grain-price').value) <= 0)) {
-                profitResultsDiv.innerHTML = `<p style='color:red;'>Since a Grain Yield was used/calculated in the first step, please enter a valid price greater than 0 for **Grain** to complete the comparison.</p>`;
-                return;
-            }
+document.getElementById('save-factors').onclick = ()=>{
+  saveFactors(FACTORS);
+  alert('Conversion factors saved. The Calculator will use these when no manual hay yield is entered.');
+};
+document.getElementById('reset-factors').onclick = ()=>{
+  if(confirm('Reset conversion factors to defaults?')){
+    resetFactors();
+    FACTORS = loadFactors();
+    renderConvTab();
+  }
+};
 
-            // --- HAY FINANCIALS (NET PROFIT) ---
-            const totalHayRevenue = lastCalculation.totalHayTonnage * hayPricePerTonne;
-            
-            // Net Profit = Hay Revenue - Contracting Costs - Grain Input Costs (which is $0 now)
-            const totalHayProfit = totalHayRevenue - lastCalculation.totalContractingCost - totalGrainInputCosts;
-            
-            const profitPerHectare = totalHayProfit / lastCalculation.paddockSize;
-            
-            let hayProfitPerBale = 0;
-            let hayRevenuePerBale = 0;
-            if (lastCalculation.totalBales > 0) {
-                hayProfitPerBale = totalHayProfit / lastCalculation.totalBales;
-                hayRevenuePerBale = totalHayRevenue / lastCalculation.totalBales;
-            }
-            
-            let grainComparisonHTML = '';
-            let differenceHtml = '';
+/* ===== Calculator ===== */
+const form = document.getElementById('hayCalculator');
+const hayTypeSel = document.getElementById('hayType');
+const grainSection = document.getElementById('grainYieldSection');
+const expectedGrainYieldInput = document.getElementById('expectedGrainYield');
+const estimatedHayYieldPerHaInput = document.getElementById('estimatedHayYieldPerHa');
+const resultsDiv = document.getElementById('results');
+const profitSection = document.getElementById('profit-section');
+const profitResultsDiv = document.getElementById('profit-results');
+const modeNote = document.getElementById('mode-note');
 
-            // --- GRAIN COMPARISON ---
-            // Only perform comparison if a grain yield value was provided or used in the first step.
-            if (lastCalculation.expectedGrainYield > 0) {
-                
-                // GRAIN PROFIT: Grain Revenue - Grain Input Costs (which is $0 now)
-                const totalGrainRevenue = lastCalculation.paddockSize * lastCalculation.expectedGrainYield * grainPricePerTonne;
-                const totalGrainProfit = totalGrainRevenue - totalGrainInputCosts; // totalGrainProfit is effectively just the total revenue now
-                    
-                // 1. Comparison Details
-                grainComparisonHTML = `
-                    <hr>
-                    <h3>Comparison: Hay Profit vs. Grain Profit</h3>
-                    <p><strong>Total Estimated Grain Revenue:</strong> $${formatCurrency(totalGrainRevenue)}</p>
-                    <p><strong>Total Estimated Grain Profit:</strong> $${formatCurrency(totalGrainProfit)}</p>
-                `;
+const err = {
+  crop: document.getElementById('err-crop'),
+  grain: document.getElementById('err-grain'),
+  hay: document.getElementById('err-hay'),
+  hayprice: document.getElementById('err-hayprice'),
+  grainprice: document.getElementById('err-grainprice')
+};
 
-                // 2. Profit Difference Calculation and Display
-                const difference = totalHayProfit - totalGrainProfit; // Hay Profit minus Grain Profit
-                const differenceAbs = Math.abs(difference);
-                const color = difference >= 0 ? '#006400' : '#8B0000'; // Green for Hay winner, Red for Grain winner
-                
-                let phrase = difference >= 0 ? "Hay is more profitable by" : "Grain is more profitable by";
+function toggleGrainVisibility(){
+  const isMedic = hayTypeSel.value==='medic';
+  grainSection.style.display = isMedic ? 'none' : 'block';
+  document.getElementById('grainFinancialsSection').style.display = isMedic ? 'none' : 'block';
+}
+hayTypeSel.addEventListener('change', toggleGrainVisibility);
 
-                differenceHtml = `
-                    <hr>
-                    <p style="font-size: 1.2em; font-weight: bold; color: ${color}; margin-top: 15px; text-align: center;">
-                        ${phrase}: $${formatCurrency(differenceAbs)}
-                    </p>
-                    <p class="results-disclaimer" style="font-size: 10px; margin-top: 5px; text-align: center;">
-                        *This comparison compares Hay Net Profit (Revenue minus Contracting Costs) against Grain Revenue (assuming zero input costs for comparison).
-                    </p>
-                `;
-            }
+function fmtMoney(n){ return isFinite(n)? new Intl.NumberFormat('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n) : '0.00'; }
+function clearErrors(){ Object.values(err).forEach(e=>e.textContent=''); }
 
-            // Display Hay Financial Returns (now Net Profit)
-            profitResultsDiv.innerHTML = `
-                <h3>Hay Financial Returns (Net Profit)</h3>
-                <p><strong>Revenue per Bale:</strong> $${formatCurrency(hayRevenuePerBale)}</p>
-                <p><strong>Total Revenue:</strong> $${formatCurrency(totalHayRevenue)}</p>
-                <p><strong>Net Profit per Bale:</strong> $${formatCurrency(hayProfitPerBale)}</p>
-                <p><strong>Net Profit per Hectare:</strong> $${formatCurrency(profitPerHectare)}</p>
-                <p><strong>Total Estimated Hay Profit:</strong> $${formatCurrency(totalHayProfit)}</p>
-                ${grainComparisonHTML}
-                ${differenceHtml}
-            `;
-        });
-    </script>
+let lastCalc = {};
+
+form.addEventListener('submit', (e)=>{
+  e.preventDefault();
+  clearErrors();
+
+  const paddockSizeRaw = document.getElementById('paddockSize').value.trim();
+  const paddockSize = parseFloat(paddockSizeRaw) || 1;
+  const hectaresProvided = paddockSizeRaw !== '';
+  modeNote.style.display = hectaresProvided ? 'none' : 'block';
+
+  const crop = hayTypeSel.value;
+  const isMedic = crop==='medic';
+
+  const manualHayFilled = estimatedHayYieldPerHaInput.value.trim() !== '';
+  const grainFilled = expectedGrainYieldInput.value.trim() !== '';
+  const expectedGrain = isMedic ? 0 : (parseFloat(expectedGrainYieldInput.value) || 0);
+  const manualHay = parseFloat(estimatedHayYieldPerHaInput.value);
+
+  // Validation
+  let bad=false;
+  if(!crop){ err.crop.textContent='Select a crop type.'; bad=true; }
+  if(!isMedic){
+    if(!manualHayFilled && (!grainFilled || expectedGrain<=0)){
+      err.grain.textContent='Enter Expected Grain Yield (>0) or provide an Estimated Hay Yield.';
+      bad=true;
+    }
+  }else{
+    if(!manualHayFilled || isNaN(manualHay) || manualHay<=0){
+      err.hay.textContent='Medic requires an Estimated Hay Yield (>0).';
+      bad=true;
+    }
+  }
+  if(bad){ resultsDiv.innerHTML=''; profitSection.style.display='none'; return; }
+
+  // Yield determination (manual > factor)
+  let hayYieldPerHa = 0, factorUsed = 0, method = '';
+
+  if(manualHayFilled && manualHay>0){
+    hayYieldPerHa = manualHay;
+    method = "Manual hay yield (client input)";
+    factorUsed = expectedGrain>0 ? (hayYieldPerHa/expectedGrain) : 0;
+  }else{
+    const f = FACTORS[crop] ?? DEFAULT_FACTORS[crop];
+    if(isMedic || !f || expectedGrain<=0){
+      resultsDiv.innerHTML = `<p class="tiny" style="color:#8B0000">Invalid inputs for conversion.</p>`;
+      profitSection.style.display='none';
+      return;
+    }
+    factorUsed = f;
+    hayYieldPerHa = expectedGrain * factorUsed;
+    method = "Default/Custom Grain→Hay conversion";
+  }
+
+  // Totals & costs
+  const totalT = paddockSize * hayYieldPerHa;
+  const bales = totalT / BALE_TONNES;
+
+  let totalCost = 0;
+  if(document.getElementById('service-mowing').checked) totalCost += paddockSize * RATES.cutting_per_ha;
+  if(document.getElementById('service-raking').checked) totalCost += paddockSize * RATES.raking_per_ha;
+  if(document.getElementById('service-baling').checked) totalCost += bales * RATES.baling_per_bale;
+
+  const costPerBale = bales>0 ? (totalCost/bales) : 0;
+  const costPerHa = paddockSize>0 ? (totalCost/paddockSize) : 0;
+
+  lastCalc = { paddockSize, hectaresProvided, hayYieldPerHa, totalT, bales, totalCost, expectedGrain };
+
+  const factorHtml = (factorUsed>0 && !isMedic) ? `<p><strong>Implied Factor:</strong> ${factorUsed.toFixed(2)}</p>` : '';
+
+  // NOTE: No conversion math line is rendered anymore.
+  resultsDiv.innerHTML = `
+    <div class="result">
+      <h3>Results</h3>
+      <p><strong>Hay Yield:</strong> ${hayYieldPerHa.toFixed(2)} t/ha</p>
+      <p><strong>Method:</strong> ${method}</p>
+      ${factorHtml}
+      <hr style="border:none;border-top:1px solid var(--line);margin:10px 0">
+      <p><strong>Total Yield:</strong> ${totalT.toFixed(2)} t</p>
+      <p><strong>Total Bales (@ ${(BALE_TONNES*1000).toFixed(0)} kg):</strong> ${Math.round(bales)} bales</p>
+      <h3>Contracting Cost per Hectare: $${fmtMoney(costPerHa)}</h3>
+      <h3>Estimated Cost per Bale: $${fmtMoney(costPerBale)}</h3>
+      ${lastCalc.hectaresProvided ? `
+        <hr style="border:none;border-top:1px solid var(--line);margin:10px 0">
+        <p class="tiny"><strong>Paddock:</strong> ${paddockSize} ha</p>
+        <p class="tiny"><strong>Total Estimated Contracting Cost:</strong> $${fmtMoney(totalCost)}</p>
+        <p class="tiny muted">Estimate only. Field conditions may change final cost.</p>
+      `:''}
+    </div>
+  `;
+
+  profitSection.style.display='block';
+  profitResultsDiv.innerHTML='';
+});
+
+document.getElementById('calculate-profit-btn').addEventListener('click', ()=>{
+  if(!lastCalc || !lastCalc.totalT){ profitResultsDiv.innerHTML = `<p class="tiny" style="color:#8B0000">Run the main calculation first.</p>`; return; }
+  err.hayprice.textContent=''; err.grainprice.textContent='';
+  const hayType = hayTypeSel.value;
+  const isMedic = hayType==='medic';
+
+  const hayPrice = parseFloat(document.getElementById('hay-price').value);
+  const grainPriceRaw = document.getElementById('grain-price').value;
+  const grainPrice = isMedic ? 0 : (parseFloat(grainPriceRaw) || 0);
+
+  let bad=false;
+  if(!hayPrice || hayPrice<=0){ err.hayprice.textContent='Enter hay price (>0).'; bad=true; }
+  if(!isMedic && lastCalc.expectedGrain>0 && (!grainPrice || grainPrice<=0)){ err.grainprice.textContent='Enter grain price (>0).'; bad=true; }
+  if(bad){ profitResultsDiv.innerHTML=''; return; }
+
+  const totalHayRev = lastCalc.totalT * hayPrice;
+  const totalHayProfit = totalHayRev - lastCalc.totalCost;
+  const profitPerHa = totalHayProfit / lastCalc.paddockSize;
+
+  let perBale=0, perBaleRev=0;
+  if(lastCalc.bales>0){ perBale = totalHayProfit/lastCalc.bales; perBaleRev = totalHayRev/lastCalc.bales; }
+
+  let compHtml='', diffHtml='';
+  if(!isMedic && lastCalc.expectedGrain>0){
+    const totalGrainRev = lastCalc.paddockSize * lastCalc.expectedGrain * grainPrice;
+    const totalGrainProfit = totalGrainRev;
+    const diff = totalHayProfit - totalGrainProfit;
+    const color = diff>=0 ? 'var(--green)' : '#8B0000';
+    const phrase = diff>=0 ? 'Hay is more profitable by' : 'Grain is more profitable by';
+    compHtml = `
+      <hr style="border:none;border-top:1px solid var(--line);margin:10px 0">
+      <h3>Comparison</h3>
+      <p><strong>Estimated Grain Revenue:</strong> $${fmtMoney(totalGrainRev)}</p>
+      <p><strong>Estimated Grain Profit:</strong> $${fmtMoney(totalGrainProfit)}</p>
+    `;
+    diffHtml = `<p style="text-align:center;color:${color};font-weight:800;margin:8px 0">${phrase}: $${fmtMoney(Math.abs(diff))}</p>`;
+  }
+
+  profitResultsDiv.innerHTML = `
+    <div class="result">
+      <h3>Hay Financials (Net)</h3>
+      <p><strong>Revenue per Bale:</strong> $${fmtMoney(perBaleRev)}</p>
+      <p><strong>Total Revenue:</strong> $${fmtMoney(totalHayRev)}</p>
+      <p><strong>Net Profit per Bale:</strong> $${fmtMoney(perBale)}</p>
+      <p><strong>Net Profit per Hectare:</strong> $${fmtMoney(profitPerHa)}</p>
+      <p><strong>Total Estimated Hay Profit:</strong> $${fmtMoney(totalHayProfit)}</p>
+      ${compHtml}
+      ${diffHtml}
+      <p class="tiny muted" style="text-align:center">*Hay Net = Revenue − Contracting; Grain = Revenue (inputs excluded for envelope).</p>
+    </div>
+  `;
+});
+
+/* Print / Reset */
+document.getElementById('btn-print').onclick = ()=>window.print();
+document.getElementById('btn-reset').onclick = ()=>{
+  document.getElementById('hayCalculator').reset();
+  toggleGrainVisibility();
+  resultsDiv.innerHTML='';
+  profitResultsDiv.innerHTML='';
+  profitSection.style.display='none';
+  modeNote.style.display='none';
+};
+
+/* ===== Yield Guide samples (persist + PDF) ===== */
+const samplesWrap = document.getElementById('samples');
+const avgOut = document.getElementById('avg-dm-yield');
+
+function sampleTemplate(index, data={}){
+  const W = data.W??''; const SW = data.SW??''; const SD = data.SD??'';
+  return `
+  <div class="sample" data-index="${index}">
+    <h3 style="margin-top:0">Sample ${index+1}</h3>
+    <label>Wet biomass in 1 m² (W<sub>wet</sub>, g)</label>
+    <input type="number" step="any" inputmode="decimal" class="s-wet" placeholder="e.g., 1200" value="${W}">
+    <label>Sub-sample wet (S<sub>wet</sub>, g)</label>
+    <input type="number" step="any" inputmode="decimal" class="s-sub-wet" placeholder="e.g., 100" value="${SW}">
+    <label>Sub-sample dry (S<sub>dry</sub>, g)</label>
+    <input type="number" step="any" inputmode="decimal" class="s-sub-dry" placeholder="e.g., 35" value="${SD}">
+    <div class="tiny muted" data-out="dm">DM%: 0.00%</div>
+    <div class="tiny muted" data-out="wdry">W<sub>dry</sub> (g): 0.00</div>
+    <div class="tiny muted" data-out="tpha">DM Yield (t/ha): 0.00</div>
+  </div>`;
+}
+
+let SAMPLES = [];
+
+function addSample(data={}){
+  const idx = SAMPLES.length;
+  SAMPLES.push({W:0,SW:0,SD:0,dm:0,wdry:0,tpha:0});
+  const div = document.createElement('div');
+  div.innerHTML = sampleTemplate(idx, data);
+  samplesWrap.appendChild(div.firstElementChild);
+  bindSample(idx);
+  if(data.W||data.SW||data.SD){
+    const el = samplesWrap.querySelector(`.sample[data-index="${idx}"]`);
+    computeSample(idx, el);
+  }
+  updateSummary();
+  persistSamples();
+}
+function clearSamples(){
+  SAMPLES = [];
+  samplesWrap.innerHTML='';
+  updateSummary();
+  persistSamples();
+}
+function bindSample(i){
+  const el = samplesWrap.querySelector(`.sample[data-index="${i}"]`);
+  ['s-wet','s-sub-wet','s-sub-dry'].forEach(cls=>{
+    el.querySelector('.'+cls).addEventListener('input', ()=>{ computeSample(i, el); updateSummary(); persistSamples(); });
+  });
+}
+function computeSample(i, el){
+  const W  = parseFloat(el.querySelector('.s-wet').value)||0;
+  const SW = parseFloat(el.querySelector('.s-sub-wet').value)||0;
+  const SD = parseFloat(el.querySelector('.s-sub-dry').value)||0;
+  SAMPLES[i].W=W; SAMPLES[i].SW=SW; SAMPLES[i].SD=SD;
+  let dm=0, wdry=0, tpha=0;
+  if(SW>0 && SD>0){ dm = (SD/SW)*100; }
+  if(W>0 && dm>0){ wdry = W * (dm/100); tpha = wdry/100; }
+  SAMPLES[i].dm=dm; SAMPLES[i].wdry=wdry; SAMPLES[i].tpha=tpha;
+  el.querySelector('[data-out="dm"]').innerHTML   = `DM%: ${dm.toFixed(2)}%`;
+  el.querySelector('[data-out="wdry"]').innerHTML = `W<sub>dry</sub> (g): ${wdry.toFixed(2)}`;
+  el.querySelector('[data-out="tpha"]').innerHTML = `DM Yield (t/ha): ${tpha.toFixed(2)}`;
+}
+function updateSummary(){
+  const valid = SAMPLES.filter(s=>s.tpha>0).map(s=>s.tpha);
+  const avg = valid.length? (valid.reduce((a,b)=>a+b,0)/valid.length) : 0;
+  avgOut.textContent = avg.toFixed(2);
+}
+
+/* Persist guide inputs */
+function persistSamples(){
+  const payload = SAMPLES.map((s,i)=>{
+    const el = samplesWrap.querySelector(`.sample[data-index="${i}"]`);
+    if(!el) return {W:0,SW:0,SD:0};
+    return {
+      W: el.querySelector('.s-wet').value || '',
+      SW: el.querySelector('.s-sub-wet').value || '',
+      SD: el.querySelector('.s-sub-dry').value || ''
+    };
+  });
+  localStorage.setItem('yieldGuideSamples', JSON.stringify(payload));
+}
+function restoreSamples(){
+  const raw = localStorage.getItem('yieldGuideSamples');
+  if(!raw){ addSample(); addSample(); addSample(); return; }
+  try{
+    const arr = JSON.parse(raw);
+    if(arr.length===0){ addSample(); addSample(); addSample(); return; }
+    arr.forEach(s=>addSample(s));
+  }catch{ addSample(); addSample(); addSample(); }
+}
+
+document.getElementById('add-sample').onclick = ()=>addSample();
+document.getElementById('clear-samples').onclick = ()=>clearSamples();
+document.getElementById('push-to-calculator').onclick = ()=>{
+  const val = parseFloat(avgOut.textContent)||0;
+  if(val>0){
+    document.getElementById('estimatedHayYieldPerHa').value = val.toFixed(2);
+    activate('calc');
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+};
+
+/* Export Yield Guide PDF */
+document.getElementById('export-yield-pdf').onclick = ()=>{
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'p', unit:'mm', format:'a4' });
+  let y = 15;
+  doc.setFontSize(16); doc.text('Yield Guide Results', 10, y); y+=8;
+  doc.setFontSize(11);
+  SAMPLES.forEach((s,i)=>{
+    const W = (samplesWrap.querySelector(`.sample[data-index="${i}"]`)?.querySelector('.s-wet').value)||'-';
+    const SW= (samplesWrap.querySelector(`.sample[data-index="${i}"]`)?.querySelector('.s-sub-wet').value)||'-';
+    const SD= (samplesWrap.querySelector(`.sample[data-index="${i}"]`)?.querySelector('.s-sub-dry').value)||'-';
+    doc.text(`Sample ${i+1}: Wwet=${W}g, Swet=${SW}g, Sdry=${SD}g`, 10, y);
+    y+=6; if(y>280){ doc.addPage(); y=15; }
+  });
+  y+=4; doc.text(`Average DM Yield: ${avgOut.textContent} t/ha`, 10, y);
+  doc.save('Yield_Guide_Results.pdf');
+};
+
+/* Init */
+window.onload = function(){
+  activate('calc');
+  toggleGrainVisibility();
+  renderConvTab();
+  restoreSamples();
+
+  if(typeof renderMathInElement!=='undefined'){
+    renderMathInElement(document.body,{delimiters:[{left:"$$",right:"$$",display:true},{left:"$",right:"$",display:false}]});
+  }
+};
+
+document.getElementById('btn-print').onclick = ()=>window.print();
+</script>
 </body>
 </html>
