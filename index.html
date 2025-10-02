@@ -368,7 +368,7 @@
                 // SCENARIO 2: USE DEFAULT CONVERSION FACTOR 
                 
                 if (isMedic) {
-                     // Should be blocked by validation above, but included for robustness
+                    // Should be blocked by validation above, but included for robustness
                     resultsDiv.innerHTML = `<p style='color:red;'>Error: Medic requires a manual Hay Yield input as it has no standard Grain Yield baseline.</p>`;
                     profitSection.classList.add('hidden');
                     return;
@@ -384,12 +384,17 @@
                 hayYieldPerHectare = expectedGrainYield * yieldFactorUsed;
                 calculationMethodMessage = "Using Default Hay/Grain Conversion Ratio";
 
-                // Add the detailed breakdown for transparency using LaTeX for formulas
+                // VASTLY SIMPLIFIED AND EASIER TO UNDERSTAND CONVERSION DETAIL
                 conversionDetail = `
                     <span class="calculation-detail">
-                        Derived from: Harvest Index (HI) of ${hiUsed.toFixed(3)} and ${EFFICIENCY * 100}\\% Hay Efficiency<br>
-                        Factor: ${yieldFactorUsed.toFixed(2)} $\\rightarrow$ $$ \\left( \\frac{1}{\\text{HI}} \\right) \\times \\text{Efficiency} = \\left( \\frac{1}{${hiUsed.toFixed(3)}} \\right) \\times ${EFFICIENCY.toFixed(2)} \\approx ${yieldFactorUsed.toFixed(2)} $$
-                        Total Yield: $$ \\text{Grain Yield} \\times \\text{Factor} = ${expectedGrainYield.toFixed(2)} \\times ${yieldFactorUsed.toFixed(2)} = ${hayYieldPerHectare.toFixed(2)} \\text{ t/ha} $$
+                        <strong style="color: #006400;">Understanding the Conversion:</strong><br>
+                        We use the crop's **Harvest Index (HI)** to estimate the total dry matter (plant weight) based on your expected grain yield. The HI for ${hayType} is typically **${hiUsed.toFixed(3)}**.
+                        <br><br>
+                        The conversion factor of **${yieldFactorUsed.toFixed(2)}** is derived from the HI, factoring in a **${EFFICIENCY * 100}% Hay Recovery Efficiency** to account for losses during the mowing, raking, and baling process.
+                    </span>
+                    <!-- Final calculation line, keeping KaTeX for formula clarity -->
+                    <span class="calculation-detail" style="font-weight: bold; margin-top: 10px;">
+                        $$ \\text{Hay Yield/ha} = \\text{Grain Yield/ha} \\times \\text{Factor} = ${expectedGrainYield.toFixed(2)} \\times ${yieldFactorUsed.toFixed(2)} = ${hayYieldPerHectare.toFixed(2)} \\text{ t/ha} $$
                     </span>
                 `;
             }
@@ -532,7 +537,7 @@
                 // GRAIN PROFIT: Grain Revenue - Grain Input Costs
                 const totalGrainRevenue = lastCalculation.paddockSize * lastCalculation.expectedGrainYield * grainPricePerTonne;
                 const totalGrainProfit = totalGrainRevenue - totalGrainInputCosts;
-                        
+                         
                 // 1. Comparison Details
                 grainComparisonHTML = `
                     <hr>
