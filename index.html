@@ -136,8 +136,8 @@
 <body>
 
     <div class="logo-container">
-      <!-- Using relative path 'logo.png' for GitHub hosting -->
-      <img src="logo.png" alt="Your Company Logo" class="logo">
+        <!-- Using relative path 'logo.png' for GitHub hosting -->
+        <img src="logo.png" alt="Your Company Logo" class="logo">
     </div>
 
     <h1>Hay Potential Calculator</h1>
@@ -209,7 +209,7 @@
             <!-- NEW INPUT: GRAIN INPUT COSTS -->
             <label for="grain-input-cost">Grain Input Costs ($ per hectare):</label>
             <input type="number" id="grain-input-cost" step="any" placeholder="e.g., 250">
-            <p class="small-italic">This accounts for your seed, fertiliser, sprays, and other costs incurred up to harvest for the grain option.</p><br>
+            <p class="small-italic">This accounts for your seed, fertiliser, sprays, and other costs incurred up to harvest for the grain option. **(Optional - Defaults to $0 if blank)**</p><br>
         </div>
         
         <button id="calculate-profit-btn" type="button">Calculate Profit</button>
@@ -482,24 +482,25 @@
             const hayType = hayTypeSelect.value;
             const isMedic = hayType === 'medic';
             
-            // Get prices and input costs
+            // Get prices
             const grainPricePerTonne = isMedic 
                                              ? 0 
                                              : parseFloat(document.getElementById('grain-price').value); 
             
-            // NEW: Get grain input cost per hectare
+            // NEW: Get grain input cost per hectare. Default to 0 if input is empty or invalid.
             const grainInputCostPerHa = isMedic 
                                              ? 0 
-                                             : parseFloat(document.getElementById('grain-input-cost').value); 
+                                             : (parseFloat(document.getElementById('grain-input-cost').value) || 0); 
 
+            // Validation check for Hay price
             if (Object.keys(lastCalculation).length === 0 || isNaN(hayPricePerTonne) || hayPricePerTonne <= 0) {
                 profitResultsDiv.innerHTML = `<p style='color:red;'>Please run the main calculation and enter a valid price greater than 0 for **Hay**.</p>`;
                 return;
             }
             
-            // If NOT medic, we must ensure grain price and input costs are valid for comparison
-            if (!isMedic && (isNaN(grainPricePerTonne) || grainPricePerTonne <= 0 || isNaN(grainInputCostPerHa) || grainInputCostPerHa < 0)) {
-                profitResultsDiv.innerHTML = `<p style='color:red;'>Please enter valid prices and input costs for **Grain** to complete the comparison.</p>`;
+            // If NOT medic, we must ensure grain price is valid for comparison. Grain input cost is optional.
+            if (!isMedic && (isNaN(grainPricePerTonne) || grainPricePerTonne <= 0)) {
+                profitResultsDiv.innerHTML = `<p style='color:red;'>Please enter a valid price greater than 0 for **Grain** to complete the comparison.</p>`;
                 return;
             }
 
