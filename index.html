@@ -132,15 +132,15 @@
 
       <div class="service-item">
         <input type="checkbox" id="service-mowing" checked>
-        <label for="service-mowing">Mowing — DC163 Case IH Mower Conditioner / SP Mower</label>
+        <label for="service-mowing">Mowing $55p/ha — DC163 Case IH Mower Conditioner / SP Mower</label>
       </div>
       <div class="service-item">
         <input type="checkbox" id="service-raking" checked>
-        <label for="service-raking">Raking</label>
+        <label for="service-raking">Raking $3p/ha</label>
       </div>
       <div class="service-item">
         <input type="checkbox" id="service-baling" checked>
-        <label for="service-baling">Baling — Krone HD Baler (750 kg per bale)</label>
+        <label for="service-baling">Baling $26p/bale — Krone HD Baler (750 kg per bale)</label>
       </div>
 
       <div class="spacer"></div>
@@ -322,7 +322,7 @@
 /* =========================
    Global Config & Defaults
 =========================*/
-const RATES = { cutting_per_ha:60, raking_per_ha:5, baling_per_bale:28 }; // change baling here if needed
+const RATES = { cutting_per_ha:60, raking_per_ha:3, baling_per_bale:28 }; // change baling here if needed
 const BALE_TONNES = 0.75;  // 750 kg per bale
 
 const DEFAULT_FACTORS = { wheat:1.9, barley:1.7, oats:2.3, vetch:2.6, medic:2.6 };
@@ -774,3 +774,4 @@ document.getElementById('btn-print').onclick = ()=>window.print();
 </script>
 </body>
 </html>
+
